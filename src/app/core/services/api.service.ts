@@ -20,27 +20,31 @@ export class ApiService {
     return this.http.patch(`${this.base}/users/me`, data);
   }
 
-  getCriteria(): Observable<any> {
-    return this.http.get(`${this.base}/health/criteria`);
+  listAnalysis(): Observable<any> {
+    return this.http.get(`${this.base}/health/analysis`);
   }
 
-  getLabTests(): Observable<any> {
-    return this.http.get(`${this.base}/health/lab-tests`);
+  listCriteria(analysisId?: string): Observable<any> {
+    const params = analysisId ? `?analysis_id=${analysisId}` : '';
+    return this.http.get(`${this.base}/health/criteria${params}`);
   }
 
-  getDashboard(): Observable<any> {
-    return this.http.get(`${this.base}/health/dashboard`);
+  getUserCriteria(): Observable<any> {
+    return this.http.get(`${this.base}/health/user-criteria`);
   }
 
-  createNumericEvent(data: any): Observable<any> {
-    return this.http.post(`${this.base}/health/events/numeric`, data);
+  setUserCriterion(criterionId: string, value: string): Observable<any> {
+    return this.http.post(`${this.base}/health/user-criteria`, {
+      criterion_id: criterionId,
+      value,
+    });
   }
 
-  createBooleanEvent(data: any): Observable<any> {
-    return this.http.post(`${this.base}/health/events/boolean`, data);
+  getProgress(): Observable<any> {
+    return this.http.get(`${this.base}/health/progress`);
   }
 
-  createMarkDoneEvent(data: any): Observable<any> {
-    return this.http.post(`${this.base}/health/events/mark-done`, data);
+  getRecommendations(): Observable<any> {
+    return this.http.get(`${this.base}/health/recommendations`);
   }
 }

@@ -1,14 +1,14 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { TuiButton } from '@taiga-ui/core';
+import { TuiButton, TuiLoader } from '@taiga-ui/core';
 import { AuthService } from '../../core/services/auth.service';
 import { ApiService } from '../../core/services/api.service';
 
 @Component({
   selector: 'app-nav',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, TuiButton, CommonModule],
+  imports: [RouterLink, RouterLinkActive, TuiButton, TuiLoader, CommonModule],
   template: `
     <nav class="navbar">
       <div class="nav-brand">
@@ -25,6 +25,9 @@ import { ApiService } from '../../core/services/api.service';
         <a *ngIf="isAdmin" routerLink="/admin" routerLinkActive="active" class="nav-link admin-link">
           ⚙️ Админ
         </a>
+        @if (navLoading) {
+          <span class="nav-loader"><tui-loader size="xs" /></span>
+        }
       </div>
       <button tuiButton appearance="ghost" size="s" (click)="logout()">Выйти</button>
     </nav>
@@ -81,6 +84,13 @@ import { ApiService } from '../../core/services/api.service';
     }
 
     .admin-link.active { background: #fef3c7; color: #92400e; }
+
+    .nav-loader {
+      display: inline-flex;
+      align-items: center;
+      padding: 0 0.75rem;
+      min-height: 2rem;
+    }
   `],
 })
 export class NavComponent implements OnInit {
@@ -88,15 +98,20 @@ export class NavComponent implements OnInit {
   private api = inject(ApiService);
 
   isAdmin = false;
+  navLoading = false;
 
   ngOnInit(): void {
     if (this.auth.isAuthenticated()) {
+      this.navLoading = true;
       this.api.getMe().subscribe({
         next: (res: any) => {
           const u = res.data || res;
           this.isAdmin = u?.is_admin === true;
+          this.navLoading = false;
         },
-        error: () => {},
+        error: () => {
+          this.navLoading = false;
+        },
       });
     }
   }

@@ -20,7 +20,6 @@ interface Criterion {
   name: string;
   level: number;
   sex: string;
-  blocked_by: string;
   input_type: string;
   lifetime: number;
   sort_order: number;
@@ -64,10 +63,15 @@ interface Group {
 
             <div class="form-group">
               <label>Критерий</label>
-              <select [(ngModel)]="recForm.criterion_id" class="input">
-                <option value="">— выберите критерий —</option>
-                <option *ngFor="let c of criteria" [value]="c.id">{{ c.name }}</option>
-              </select>
+              @if (loadingCriteria && criteria.length === 0) {
+                <div class="field-loader"><tui-loader size="xs" /></div>
+              }
+              @if (!(loadingCriteria && criteria.length === 0)) {
+                <select [(ngModel)]="recForm.criterion_id" class="input">
+                  <option value="">— выберите критерий —</option>
+                  <option *ngFor="let c of criteria" [value]="c.id">{{ c.name }}</option>
+                </select>
+              }
             </div>
 
             <div class="form-group">
@@ -128,7 +132,9 @@ interface Group {
               </div>
               <div class="rec-actions">
                 <button tuiButton size="xs" appearance="ghost" (click)="editRec(r)">✏️ Изменить</button>
-                <button tuiButton size="xs" appearance="destructive" (click)="deleteRec(r.id)">🗑️ Удалить</button>
+                <button tuiButton size="xs" appearance="destructive" [disabled]="deletingRecId === r.id" (click)="deleteRec(r.id)">
+                  @if (deletingRecId === r.id) { <tui-loader size="xs" /> } @else { 🗑️ Удалить }
+                </button>
               </div>
             </div>
           </div>
@@ -150,10 +156,15 @@ interface Group {
 
             <div class="form-group">
               <label>Группа</label>
-              <select [(ngModel)]="critForm.group_id" class="input">
-                <option value="">— без группы —</option>
-                <option *ngFor="let g of groups" [value]="g.id">{{ g.name }}</option>
-              </select>
+              @if (loadingGroups && groups.length === 0) {
+                <div class="field-loader"><tui-loader size="xs" /></div>
+              }
+              @if (!(loadingGroups && groups.length === 0)) {
+                <select [(ngModel)]="critForm.group_id" class="input">
+                  <option value="">— без группы —</option>
+                  <option *ngFor="let g of groups" [value]="g.id">{{ g.name }}</option>
+                </select>
+              }
             </div>
 
             <div class="form-group">
@@ -163,7 +174,7 @@ interface Group {
 
             <div class="form-group">
               <label>Тип ввода</label>
-              <select [(ngModel)]="critForm.input_type" class="input">
+              <select [(ngModel)]="critForm.input_type" (ngModelChange)="onInputTypeChange()" class="input">
                 <option value="numeric">numeric — число</option>
                 <option value="check">check — факт (есть/нет)</option>
                 <option value="boolean">boolean — результат (+ / −)</option>
@@ -189,38 +200,52 @@ interface Group {
               <input [(ngModel)]="critForm.sort_order" type="number" min="0" class="input" />
             </div>
 
-            <div class="form-group">
-              <label>Блокируется (blocked_by)</label>
-              <input [(ngModel)]="critForm.blocked_by" class="input" placeholder="level_1 / criteria_uuid" />
+            <!-- Input type description -->
+            <div class="form-group full input-type-desc" *ngIf="critForm.input_type">
+              <div class="type-info" [ngClass]="'info-' + critForm.input_type">
+                <ng-container *ngIf="critForm.input_type === 'numeric'">
+                  📊 <strong>numeric</strong> — пользователь вводит число. Укажите ниже диапазон нормы.
+                </ng-container>
+                <ng-container *ngIf="critForm.input_type === 'check'">
+                  ✅ <strong>check</strong> — пользователь отмечает, сделал ли он это (например, посетил врача).
+                  «+» сохраняется, «−» игнорируется. Дополнительных полей не требуется.
+                </ng-container>
+                <ng-container *ngIf="critForm.input_type === 'boolean'">
+                  🔵 <strong>boolean</strong> — бинарный результат: «+» положительный (норма), «−» отрицательный
+                  (автоматически запускает рекомендацию-тревогу). Дополнительных полей не требуется.
+                </ng-container>
+              </div>
             </div>
 
-            <!-- Normal range for numeric criteria -->
-            <div class="form-group section-divider full">
-              <span class="divider-label">Диапазон нормы (для числовых показателей)</span>
-            </div>
+            <!-- Normal range — numeric ONLY -->
+            <ng-container *ngIf="critForm.input_type === 'numeric'">
+              <div class="form-group section-divider full">
+                <span class="divider-label">Диапазон нормы</span>
+              </div>
 
-            <div class="form-group">
-              <label>Норма: минимум</label>
-              <input [(ngModel)]="critMinStr" type="text" class="input" placeholder="Не задано" />
-            </div>
+              <div class="form-group">
+                <label>Норма: минимум</label>
+                <input [(ngModel)]="critMinStr" type="text" class="input" placeholder="Не задано" />
+              </div>
 
-            <div class="form-group">
-              <label>Норма: максимум</label>
-              <input [(ngModel)]="critMaxStr" type="text" class="input" placeholder="Не задано" />
-            </div>
+              <div class="form-group">
+                <label>Норма: максимум</label>
+                <input [(ngModel)]="critMaxStr" type="text" class="input" placeholder="Не задано" />
+              </div>
 
-            <div class="form-group">
-              <label>Дельта (некритичное отклонение)</label>
-              <input [(ngModel)]="critDeltaStr" type="text" class="input" placeholder="Не задано" />
-            </div>
+              <div class="form-group">
+                <label>Дельта (некритичное отклонение, δ)</label>
+                <input [(ngModel)]="critDeltaStr" type="text" class="input" placeholder="Не задано" />
+              </div>
 
-            <div class="form-group norm-hint">
-              <p class="hint-text">
-                <strong>Норма:</strong> [мин; макс]<br>
-                <strong>Предупреждение:</strong> [мин−δ; мин) или (макс; макс+δ]<br>
-                <strong>Тревога:</strong> &lt; мин−δ или &gt; макс+δ
-              </p>
-            </div>
+              <div class="form-group norm-hint">
+                <p class="hint-text">
+                  <strong>Норма:</strong> [мин; макс]<br>
+                  <strong>Предупреждение:</strong> [мин−δ; мин) или (макс; макс+δ]<br>
+                  <strong>Тревога:</strong> &lt; мин−δ или &gt; макс+δ
+                </p>
+              </div>
+            </ng-container>
 
           </div>
           <div class="form-actions">
@@ -376,6 +401,19 @@ interface Group {
       letter-spacing: 0.05em;
     }
 
+    .input-type-desc { margin-bottom: 0.25rem; }
+
+    .type-info {
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    .info-numeric  { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+    .info-check    { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .info-boolean  { background: #f5f3ff; color: #5b21b6; border: 1px solid #ddd6fe; }
+
     .norm-hint {
       grid-column: 2 / 3;
       justify-content: center;
@@ -494,6 +532,8 @@ interface Group {
     .empty { text-align: center; color: #94a3b8; padding: 2rem; }
 
     .error { color: #dc2626; font-size: 0.875rem; margin: 0.5rem 0 0; }
+
+    .field-loader { display: flex; padding: 0.5rem 0; min-height: 2.25rem; align-items: center; }
   `],
 })
 export class AdminComponent implements OnInit {
@@ -507,10 +547,12 @@ export class AdminComponent implements OnInit {
   groups: Group[] = [];
 
   // Loading states
+  loadingGroups = false;
   loadingRecs = false;
   loadingCriteria = false;
   savingRec = false;
   savingCrit = false;
+  deletingRecId: string | null = null;
 
   // Recommendation form
   editingRec: AdminRec | null = null;
@@ -545,7 +587,7 @@ export class AdminComponent implements OnInit {
   }
 
   emptyCrit(): Partial<Criterion> {
-    return { level: 1, input_type: 'numeric', lifetime: 0, sort_order: 0, sex: '', blocked_by: '' };
+    return { level: 1, input_type: 'numeric', lifetime: 0, sort_order: 0, sex: '' };
   }
 
   criterionName(id: string): string {
@@ -569,8 +611,13 @@ export class AdminComponent implements OnInit {
   // ---- Loaders ----
 
   loadGroups(): void {
+    this.loadingGroups = true;
     this.api.listGroups().subscribe({
-      next: (res: any) => { this.groups = res.data || res || []; },
+      next: (res: any) => {
+        this.groups = res.data || res || [];
+        this.loadingGroups = false;
+      },
+      error: () => (this.loadingGroups = false),
     });
   }
 
@@ -650,8 +697,13 @@ export class AdminComponent implements OnInit {
 
   deleteRec(id: string): void {
     if (!confirm('Удалить рекомендацию?')) return;
+    this.deletingRecId = id;
     this.api.adminDeleteRecommendation(id).subscribe({
-      next: () => this.loadRecs(),
+      next: () => {
+        this.deletingRecId = null;
+        this.loadRecs();
+      },
+      error: () => (this.deletingRecId = null),
     });
   }
 
@@ -666,6 +718,14 @@ export class AdminComponent implements OnInit {
     this.critError = '';
     this.tab = 'criteria';
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  onInputTypeChange(): void {
+    if (this.critForm.input_type !== 'numeric') {
+      this.critMinStr = '';
+      this.critMaxStr = '';
+      this.critDeltaStr = '';
+    }
   }
 
   cancelCrit(): void {
@@ -684,12 +744,13 @@ export class AdminComponent implements OnInit {
     }
     this.critError = '';
     this.savingCrit = true;
+    const isNumeric = this.critForm.input_type === 'numeric';
     const payload: any = {
       ...this.critForm,
       id: this.editingCrit ? this.editingCrit.id : undefined,
-      min_value: this.critMinStr !== '' ? parseFloat(this.critMinStr) : null,
-      max_value: this.critMaxStr !== '' ? parseFloat(this.critMaxStr) : null,
-      delta: this.critDeltaStr !== '' ? parseFloat(this.critDeltaStr) : null,
+      min_value: isNumeric && this.critMinStr !== '' ? parseFloat(this.critMinStr) : null,
+      max_value: isNumeric && this.critMaxStr !== '' ? parseFloat(this.critMaxStr) : null,
+      delta: isNumeric && this.critDeltaStr !== '' ? parseFloat(this.critDeltaStr) : null,
     };
     this.api.adminUpsertCriterion(payload).subscribe({
       next: () => {

@@ -2,6 +2,8 @@ import { Component, OnInit, AfterViewInit, inject, ElementRef, ViewChild, PLATFO
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TuiButton, TuiLoader } from '@taiga-ui/core';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { NavComponent } from '../../shared/nav/nav.component';
 import { ApiService } from '../../core/services/api.service';
 
@@ -46,6 +48,9 @@ interface WeeklyItem {
     <div class="page">
 
       <!-- Progress Summary -->
+      <section class="card progress-card" *ngIf="loadingProgress && !progress">
+        <tui-loader />
+      </section>
       <section class="card progress-card" *ngIf="progress">
         <div class="progress-header">
           <div>
@@ -72,10 +77,9 @@ interface WeeklyItem {
 
       <!-- Tabs -->
       <div class="tabs">
-        <button class="tab" [class.active]="activeTab === 'criteria'" (click)="activeTab = 'criteria'">🔬 Показатели</button>
-        <button class="tab" [class.active]="activeTab === 'recommendations'" (click)="activeTab = 'recommendations'">💡 Рекомендации</button>
-        <button class="tab" [class.active]="activeTab === 'weekly'" (click)="activeTab = 'weekly'">📅 Неделя</button>
-        <button class="tab" [class.active]="activeTab === 'chart'" (click)="activeTab = 'chart'">📈 График</button>
+        <button type="button" class="tab" [class.active]="activeTab === 'criteria'" (click)="onTabChange('criteria')">🔬 Показатели</button>
+        <button type="button" class="tab" [class.active]="activeTab === 'weekly'" (click)="onTabChange('weekly')">📅 Неделя</button>
+        <button type="button" class="tab" [class.active]="activeTab === 'chart'" (click)="onTabChange('chart')">📈 График</button>
       </div>
 
       <!-- Criteria Tab -->
@@ -119,7 +123,9 @@ interface WeeklyItem {
                             (keyup.enter)="saveValue(entry)"
                             placeholder="Введите значение"
                           />
-                          <button tuiButton size="xs" appearance="primary" (click)="saveValue(entry)">✓</button>
+                          <button tuiButton size="xs" appearance="primary" [disabled]="savingCriterionId === entry.criterion_id" (click)="saveValue(entry)">
+                            @if (savingCriterionId === entry.criterion_id) { <tui-loader size="xs" /> } @else { ✓ }
+                          </button>
                           <button tuiButton size="xs" appearance="ghost" (click)="cancelEdit()">✗</button>
                         </div>
                       } @else {
@@ -159,7 +165,9 @@ interface WeeklyItem {
                       @if (editingId === entry.criterion_id) {
                         <div class="inline-edit">
                           <input [(ngModel)]="editValue" type="text" class="edit-input" (keyup.enter)="saveValue(entry)" />
-                          <button tuiButton size="xs" appearance="primary" (click)="saveValue(entry)">✓</button>
+                          <button tuiButton size="xs" appearance="primary" [disabled]="savingCriterionId === entry.criterion_id" (click)="saveValue(entry)">
+                            @if (savingCriterionId === entry.criterion_id) { <tui-loader size="xs" /> } @else { ✓ }
+                          </button>
                           <button tuiButton size="xs" appearance="ghost" (click)="cancelEdit()">✗</button>
                         </div>
                       } @else {
@@ -176,21 +184,6 @@ interface WeeklyItem {
             </table>
           </div>
         }
-      </section>
-
-      <!-- Recommendations Tab -->
-      <section class="card" *ngIf="activeTab === 'recommendations'">
-        <h2 class="section-title">💡 Рекомендации</h2>
-        <div *ngIf="recommendations.length === 0" class="empty">🎉 Все показатели в норме!</div>
-        <div class="rec-list">
-          <div *ngFor="let r of recommendations" class="rec-item" [class]="'rec-' + r.severity">
-            <span class="rec-icon">{{ severityEmoji(r.severity) }}</span>
-            <div class="rec-body">
-              <p class="rec-criterion">{{ r.criterion_name }}</p>
-              <p class="rec-text">{{ r.text }}</p>
-            </div>
-          </div>
-        </div>
       </section>
 
       <!-- Weekly Recommendations Tab -->
@@ -219,7 +212,12 @@ interface WeeklyItem {
       <!-- Chart Tab -->
       <section class="card chart-card" *ngIf="activeTab === 'chart'">
         <h2 class="section-title">📈 Визуализация здоровья по группам</h2>
-        <canvas #healthChart class="chart-canvas"></canvas>
+        <div class="chart-wrap">
+          @if (loadingChart) {
+            <div class="chart-overlay"><tui-loader /></div>
+          }
+          <canvas #healthChart class="chart-canvas"></canvas>
+        </div>
       </section>
     </div>
   `,
@@ -395,27 +393,6 @@ interface WeeklyItem {
 
     .rec-tip { font-size: 0.8rem; color: #64748b; line-height: 1.4; }
 
-    /* Recommendations */
-    .rec-list { display: flex; flex-direction: column; gap: 0.75rem; }
-
-    .rec-item {
-      display: flex;
-      gap: 0.75rem;
-      padding: 0.875rem 1rem;
-      border-radius: 0.75rem;
-      border-left: 3px solid transparent;
-      background: #f8fafc;
-    }
-
-    .rec-critical { border-left-color: #ef4444; background: #fef2f2; }
-    .rec-warning  { border-left-color: #f59e0b; background: #fffbeb; }
-    .rec-ok       { border-left-color: #22c55e; background: #f0fdf4; }
-
-    .rec-icon { font-size: 1.25rem; flex-shrink: 0; }
-    .rec-body { flex: 1; }
-    .rec-criterion { font-weight: 600; font-size: 0.9rem; margin: 0 0 0.25rem; color: #1e293b; }
-    .rec-text { font-size: 0.85rem; color: #475569; margin: 0; }
-
     /* Weekly */
     .week-label { font-size: 0.85rem; font-weight: 400; color: #94a3b8; }
 
@@ -474,6 +451,22 @@ interface WeeklyItem {
     }
 
     /* Chart */
+    .chart-wrap {
+      position: relative;
+      min-height: 280px;
+    }
+
+    .chart-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.85);
+      z-index: 1;
+      border-radius: 0.5rem;
+    }
+
     .chart-canvas { max-height: 300px; width: 100%; }
 
     .empty {
@@ -490,11 +483,13 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   private platformId = inject(PLATFORM_ID);
 
   loading = true;
+  loadingProgress = true;
   loadingWeekly = false;
+  loadingChart = false;
   activeTab = 'criteria';
 
   progress: any = null;
-  recommendations: any[] = [];
+  savingCriterionId: string | null = null;
   weeklyItems: WeeklyItem[] = [];
   weekStart = '';
 
@@ -516,32 +511,46 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   loadData(): void {
     this.loading = true;
+    this.loadingProgress = true;
 
-    this.api.getProgress().subscribe({
-      next: (res: any) => (this.progress = res.data || res),
-      error: () => {},
+    forkJoin({
+      progress: this.api.getProgress().pipe(catchError(() => of(null))),
+      groups: this.api.listGroups().pipe(catchError(() => of(null))),
+      weekly: this.api.getWeeklyRecommendations().pipe(catchError(() => of(null))),
+    }).subscribe({
+      next: bundle => {
+        this.loadingProgress = false;
+        const pr = bundle.progress as any;
+        if (pr) {
+          this.progress = pr.data ?? pr;
+        }
+        const gr = bundle.groups as any;
+        this.groups = gr ? (gr.data ?? gr) ?? [] : [];
+        const wk = bundle.weekly as any;
+        if (wk) {
+          const d = wk.data ?? wk;
+          this.weeklyItems = d.items || [];
+          this.weekStart = d.week_start || '';
+        }
+        this.loadCriteria();
+      },
+      error: () => {
+        this.loadingProgress = false;
+        this.loading = false;
+      },
     });
+  }
 
-    this.api.getRecommendations().subscribe({
-      next: (res: any) => (this.recommendations = res.data || res || []),
-      error: () => {},
-    });
-
+  refreshWeekly(): void {
+    this.loadingWeekly = true;
     this.api.getWeeklyRecommendations().subscribe({
       next: (res: any) => {
         const d = res.data || res;
         this.weeklyItems = d.items || [];
         this.weekStart = d.week_start || '';
+        this.loadingWeekly = false;
       },
-      error: () => {},
-    });
-
-    this.api.listGroups().subscribe({
-      next: (res: any) => {
-        this.groups = res.data || res || [];
-        this.loadCriteria();
-      },
-      error: () => this.loadCriteria(),
+      error: () => (this.loadingWeekly = false),
     });
   }
 
@@ -581,51 +590,60 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   async renderChart(): Promise<void> {
     if (!isPlatformBrowser(this.platformId) || !this.chartCanvasRef) return;
 
-    const { Chart, registerables } = await import('chart.js');
-    Chart.register(...registerables);
+    this.loadingChart = true;
+    try {
+      const { Chart, registerables } = await import('chart.js');
+      Chart.register(...registerables);
 
-    const labels = this.criteriaGroups.map(g => g.group.name);
-    const pcts = this.criteriaGroups.map(g => {
-      const total = g.entries.length;
-      const filled = g.entries.filter(e => e.value && e.value !== '').length;
-      return total > 0 ? Math.round((filled / total) * 100) : 0;
-    });
+      const labels = this.criteriaGroups.map(g => g.group.name);
+      const pcts = this.criteriaGroups.map(g => {
+        const total = g.entries.length;
+        const filled = g.entries.filter(e => e.value && e.value !== '').length;
+        return total > 0 ? Math.round((filled / total) * 100) : 0;
+      });
 
-    if (this.chartInstance) this.chartInstance.destroy();
+      if (this.chartInstance) this.chartInstance.destroy();
 
-    const ctx = this.chartCanvasRef.nativeElement.getContext('2d')!;
-    this.chartInstance = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Заполнено (%)',
-          data: pcts,
-          backgroundColor: pcts.map(p =>
-            p >= 80 ? 'rgba(34,197,94,0.7)' : p >= 50 ? 'rgba(234,179,8,0.7)' : 'rgba(239,68,68,0.7)'
-          ),
-          borderRadius: 8,
-          borderSkipped: false,
-        }],
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: false },
-          tooltip: { callbacks: { label: (ctx: any) => `${ctx.raw}% заполнено` } },
+      const ctx = this.chartCanvasRef.nativeElement.getContext('2d')!;
+      this.chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Заполнено (%)',
+            data: pcts,
+            backgroundColor: pcts.map(p =>
+              p >= 80 ? 'rgba(34,197,94,0.7)' : p >= 50 ? 'rgba(234,179,8,0.7)' : 'rgba(239,68,68,0.7)'
+            ),
+            borderRadius: 8,
+            borderSkipped: false,
+          }],
         },
-        scales: {
-          y: { min: 0, max: 100, ticks: { callback: (v: any) => v + '%' }, grid: { color: 'rgba(0,0,0,0.05)' } },
-          x: { grid: { display: false }, ticks: { maxRotation: 30, font: { size: 11 } } },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx: any) => `${ctx.raw}% заполнено` } },
+          },
+          scales: {
+            y: { min: 0, max: 100, ticks: { callback: (v: any) => v + '%' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+            x: { grid: { display: false }, ticks: { maxRotation: 30, font: { size: 11 } } },
+          },
         },
-      },
-    });
+      });
+    } finally {
+      this.loadingChart = false;
+    }
   }
 
   onTabChange(tab: string): void {
+    const prev = this.activeTab;
     this.activeTab = tab;
     if (tab === 'chart') {
       setTimeout(() => this.renderChart(), 50);
+    }
+    if (tab === 'weekly' && tab !== prev) {
+      this.refreshWeekly();
     }
   }
 
@@ -641,13 +659,18 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   saveValue(entry: CriterionEntry): void {
     const value = this.editValue.trim();
+    this.savingCriterionId = entry.criterion_id;
     this.api.setUserCriterion(entry.criterion_id, value).subscribe({
       next: () => {
+        this.savingCriterionId = null;
         entry.value = value;
         this.cancelEdit();
         this.loadData();
       },
-      error: () => this.cancelEdit(),
+      error: () => {
+        this.savingCriterionId = null;
+        this.cancelEdit();
+      },
     });
   }
 
@@ -675,11 +698,6 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   statusLabel(status: string): string {
     const map: Record<string, string> = { ok: 'Норма', warning: 'Внимание', critical: 'Критично', empty: 'Нет данных' };
     return map[status] || status;
-  }
-
-  severityEmoji(severity: string): string {
-    const map: Record<string, string> = { critical: '🔴', warning: '⚠️', ok: '✅' };
-    return map[severity] || '💡';
   }
 
   recTypeEmoji(type: string): string {

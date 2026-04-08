@@ -49,10 +49,6 @@ export class ApiService {
     return this.http.get(`${this.base}/health/progress`);
   }
 
-  getRecommendations(): Observable<any> {
-    return this.http.get(`${this.base}/health/recommendations`);
-  }
-
   getWeeklyRecommendations(): Observable<any> {
     return this.http.get(`${this.base}/health/weekly-recommendations`);
   }

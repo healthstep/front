@@ -31,7 +31,7 @@ import { ApiService } from '../../core/services/api.service';
                 <div class="field-edit">
                   <input tuiTextfield [(ngModel)]="displayName" type="text" />
                   <button tuiButton size="s" appearance="primary" (click)="saveName()" [disabled]="saving">
-                    Сохранить
+                    @if (saving) { <tui-loader size="xs" /> } @else { Сохранить }
                   </button>
                   <button tuiButton size="s" appearance="ghost" (click)="cancelNameEdit()">Отмена</button>
                 </div>
@@ -55,7 +55,9 @@ import { ApiService } from '../../core/services/api.service';
               @if (editingBirth) {
                 <div class="field-edit">
                   <input tuiTextfield [(ngModel)]="birthDate" type="date" />
-                  <button tuiButton size="s" appearance="primary" (click)="saveBirth()" [disabled]="saving">Сохранить</button>
+                  <button tuiButton size="s" appearance="primary" (click)="saveBirth()" [disabled]="saving">
+                    @if (saving) { <tui-loader size="xs" /> } @else { Сохранить }
+                  </button>
                   <button tuiButton size="s" appearance="ghost" (click)="cancelBirthEdit()">Отмена</button>
                 </div>
               } @else {
@@ -75,7 +77,9 @@ import { ApiService } from '../../core/services/api.service';
                     <option value="male">Мужской</option>
                     <option value="female">Женский</option>
                   </select>
-                  <button tuiButton size="s" appearance="primary" (click)="saveSex()" [disabled]="saving">Сохранить</button>
+                  <button tuiButton size="s" appearance="primary" (click)="saveSex()" [disabled]="saving">
+                    @if (saving) { <tui-loader size="xs" /> } @else { Сохранить }
+                  </button>
                   <button tuiButton size="s" appearance="ghost" (click)="editingSex = false">Отмена</button>
                 </div>
               } @else {

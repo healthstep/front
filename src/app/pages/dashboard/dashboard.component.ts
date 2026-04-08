@@ -195,10 +195,13 @@ interface WeeklyItem {
 
       <!-- Weekly Recommendations Tab -->
       <section class="card" *ngIf="activeTab === 'weekly'">
-        <h2 class="section-title">📅 Рекомендации на неделю
-          <span class="week-label" *ngIf="weekStart"> — с {{ weekStart }}</span>
-        </h2>
-        <div *ngIf="weeklyItems.length === 0" class="empty">🎉 На эту неделю рекомендаций нет — все показатели в норме!</div>
+        <div class="section-header">
+          <h2 class="section-title">📅 Рекомендации на неделю
+            <span class="week-label" *ngIf="weekStart"> — с {{ weekStart }}</span>
+          </h2>
+          <div *ngIf="loadingWeekly" class="inline-loader"><tui-loader size="xs" /></div>
+        </div>
+        <div *ngIf="!loadingWeekly && weeklyItems.length === 0" class="empty">🎉 На эту неделю рекомендаций нет — все показатели в норме!</div>
         <div class="weekly-list">
           <div *ngFor="let item of weeklyItems" class="weekly-item" [class.spent]="item.weight === 0">
             <span class="weekly-icon">{{ recTypeEmoji(item.type) }}</span>
@@ -206,10 +209,7 @@ interface WeeklyItem {
               <p class="weekly-title" [class.line-through]="item.weight === 0">{{ item.title }}</p>
               <p class="weekly-criterion" *ngIf="item.criterion_name">{{ item.criterion_name }}</p>
             </div>
-            <div class="weekly-weight" *ngIf="item.weight > 0">
-              <span class="weight-badge">{{ item.weight }}</span>
-            </div>
-            <div class="weekly-weight" *ngIf="item.weight === 0">
+            <div class="weekly-status" *ngIf="item.weight === 0">
               <span class="spent-badge">✓ Отправлено</span>
             </div>
           </div>
@@ -454,15 +454,18 @@ interface WeeklyItem {
       margin: 0;
     }
 
-    .weight-badge {
-      display: inline-block;
-      background: #0284c7;
-      color: white;
-      border-radius: 9999px;
-      padding: 0.15rem 0.5rem;
-      font-size: 0.75rem;
-      font-weight: 700;
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
     }
+
+    .section-header .section-title { margin-bottom: 0; }
+
+    .inline-loader { display: inline-flex; }
+
+    .weekly-status { margin-left: auto; }
 
     .spent-badge {
       font-size: 0.75rem;
@@ -487,6 +490,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   private platformId = inject(PLATFORM_ID);
 
   loading = true;
+  loadingWeekly = false;
   activeTab = 'criteria';
 
   progress: any = null;

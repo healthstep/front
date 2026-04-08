@@ -20,13 +20,14 @@ export class ApiService {
     return this.http.patch(`${this.base}/users/me`, data);
   }
 
-  listAnalysis(): Observable<any> {
-    return this.http.get(`${this.base}/health/analysis`);
+  // Groups
+  listGroups(): Observable<any> {
+    return this.http.get(`${this.base}/health/groups`);
   }
 
-  listCriteria(analysisId?: string): Observable<any> {
-    const params = analysisId ? `?analysis_id=${analysisId}` : '';
-    return this.http.get(`${this.base}/health/criteria${params}`);
+  // Criteria
+  listCriteria(): Observable<any> {
+    return this.http.get(`${this.base}/health/criteria`);
   }
 
   getUserCriteria(): Observable<any> {
@@ -40,11 +41,37 @@ export class ApiService {
     });
   }
 
+  resetCriteria(): Observable<any> {
+    return this.http.delete(`${this.base}/health/user-criteria`);
+  }
+
   getProgress(): Observable<any> {
     return this.http.get(`${this.base}/health/progress`);
   }
 
   getRecommendations(): Observable<any> {
     return this.http.get(`${this.base}/health/recommendations`);
+  }
+
+  getWeeklyRecommendations(): Observable<any> {
+    return this.http.get(`${this.base}/health/weekly-recommendations`);
+  }
+
+  // Admin
+  adminListRecommendations(criterionId?: string): Observable<any> {
+    const params = criterionId ? `?criterion_id=${criterionId}` : '';
+    return this.http.get(`${this.base}/admin/recommendations${params}`);
+  }
+
+  adminUpsertRecommendation(rec: any): Observable<any> {
+    return this.http.post(`${this.base}/admin/recommendations`, rec);
+  }
+
+  adminDeleteRecommendation(id: string): Observable<any> {
+    return this.http.delete(`${this.base}/admin/recommendations/${id}`);
+  }
+
+  adminUpsertCriterion(criterion: any): Observable<any> {
+    return this.http.post(`${this.base}/admin/criteria`, criterion);
   }
 }

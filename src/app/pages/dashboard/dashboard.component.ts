@@ -1,39 +1,46 @@
 import { Component, OnInit, AfterViewInit, inject, ElementRef, ViewChild, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TuiButton, TuiLoader, TuiTextfield } from '@taiga-ui/core';
+import { TuiButton, TuiLoader } from '@taiga-ui/core';
 import { NavComponent } from '../../shared/nav/nav.component';
 import { ApiService } from '../../core/services/api.service';
 
 interface CriterionEntry {
   criterion_id: string;
   criterion_name: string;
-  analysis_id: string;
-  analysis_name: string;
+  group_id: string;
   value: string;
   status: string;
   recommendation: string;
   level: number;
   severity: string;
+  input_type: string;
 }
 
-interface Recommendation {
+interface CriterionGroup {
+  id: string;
+  name: string;
+  sort_order: number;
+}
+
+interface GroupWithEntries {
+  group: CriterionGroup;
+  entries: CriterionEntry[];
+}
+
+interface WeeklyItem {
+  recommendation_id: string;
   criterion_id: string;
   criterion_name: string;
-  analysis_name: string;
-  text: string;
-  severity: string;
-}
-
-interface AnalysisGroup {
-  name: string;
-  entries: CriterionEntry[];
+  type: string;
+  title: string;
+  weight: number;
 }
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, TuiButton, TuiLoader, NavComponent, FormsModule, TuiTextfield],
+  imports: [CommonModule, TuiButton, TuiLoader, NavComponent, FormsModule],
   template: `
     <app-nav />
     <div class="page">
@@ -63,82 +70,64 @@ interface AnalysisGroup {
         <span class="progress-pct">{{ progress.percent | number:'1.0-0' }}%</span>
       </section>
 
-      <!-- Chart -->
-      <section class="card chart-card">
-        <h2 class="section-title">📈 Визуализация здоровья</h2>
-        <canvas #healthChart class="chart-canvas"></canvas>
-      </section>
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab" [class.active]="activeTab === 'criteria'" (click)="activeTab = 'criteria'">🔬 Показатели</button>
+        <button class="tab" [class.active]="activeTab === 'recommendations'" (click)="activeTab = 'recommendations'">💡 Рекомендации</button>
+        <button class="tab" [class.active]="activeTab === 'weekly'" (click)="activeTab = 'weekly'">📅 Неделя</button>
+        <button class="tab" [class.active]="activeTab === 'chart'" (click)="activeTab = 'chart'">📈 График</button>
+      </div>
 
-      <!-- Recommendations -->
-      <section class="card" *ngIf="recommendations?.length">
-        <h2 class="section-title">💡 Рекомендации</h2>
-        <div class="rec-list">
-          <div *ngFor="let r of recommendations" class="rec-item" [class]="'rec-' + r.severity">
-            <span class="rec-icon">{{ severityEmoji(r.severity) }}</span>
-            <div class="rec-body">
-              <p class="rec-criterion">{{ r.criterion_name }}
-                <span class="rec-analysis" *ngIf="r.analysis_name">({{ r.analysis_name }})</span>
-              </p>
-              <p class="rec-text">{{ r.text }}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Health Criteria Table -->
-      <section class="card criteria-card">
-        <h2 class="section-title">🔬 Показатели здоровья</h2>
-
+      <!-- Criteria Tab -->
+      <section class="card criteria-card" *ngIf="activeTab === 'criteria'">
         @if (loading) {
           <tui-loader />
         }
 
-        @if (!loading && analysisGroups.length === 0) {
+        @if (!loading && criteriaGroups.length === 0) {
           <p class="empty">Нет данных. Добавьте первые показатели через бота.</p>
         }
 
-        @for (group of analysisGroups; track group.name) {
-          <div class="analysis-group">
-            <h3 class="analysis-name">{{ group.name }}</h3>
+        @for (gw of criteriaGroups; track gw.group.id) {
+          <div class="criterion-group">
+            <h3 class="group-name">{{ gw.group.name }}
+              <span class="group-count">({{ filledCount(gw) }}/{{ gw.entries.length }})</span>
+            </h3>
             <table class="criteria-table">
               <thead>
                 <tr>
                   <th>Показатель</th>
-                  <th>Уровень</th>
                   <th>Значение</th>
                   <th>Статус</th>
                   <th>Рекомендация</th>
                 </tr>
               </thead>
               <tbody>
-                @for (entry of group.entries; track entry.criterion_id) {
+                @for (entry of gw.entries; track entry.criterion_id) {
                   <tr class="criterion-row" [class]="'row-' + entry.status">
-                    <td class="criterion-name-cell">{{ entry.criterion_name }}</td>
-                    <td class="level-cell">
-                      <span class="level-badge" [class]="'level-' + entry.level">
-                        {{ levelLabel(entry.level) }}
-                      </span>
+                    <td class="criterion-name-cell">
+                      <span class="level-dot" [class]="'lvl-' + entry.level"></span>
+                      {{ entry.criterion_name }}
                     </td>
                     <td class="value-cell">
                       @if (editingId === entry.criterion_id) {
                         <div class="inline-edit">
                           <input
-                            tuiTextfield
                             [(ngModel)]="editValue"
                             type="text"
-                            size="s"
                             class="edit-input"
                             (keyup.enter)="saveValue(entry)"
+                            placeholder="Введите значение"
                           />
                           <button tuiButton size="xs" appearance="primary" (click)="saveValue(entry)">✓</button>
                           <button tuiButton size="xs" appearance="ghost" (click)="cancelEdit()">✗</button>
                         </div>
                       } @else {
-                        <span class="value-text" *ngIf="entry.value; else noValue">{{ entry.value }}</span>
-                        <ng-template #noValue><span class="no-value">—</span></ng-template>
-                        <button tuiButton size="xs" appearance="ghost" (click)="startEdit(entry)" class="edit-btn">
-                          ✏️
-                        </button>
+                        <span class="value-text" *ngIf="entry.value">
+                          {{ formatValue(entry) }}
+                        </span>
+                        <span class="no-value" *ngIf="!entry.value">—</span>
+                        <button tuiButton size="xs" appearance="ghost" (click)="startEdit(entry)" class="edit-btn">✏️</button>
                       }
                     </td>
                     <td class="status-cell">
@@ -147,7 +136,7 @@ interface AnalysisGroup {
                       </span>
                     </td>
                     <td class="rec-cell">
-                      <span class="rec-tip" *ngIf="entry.recommendation">{{ entry.recommendation }}</span>
+                      <span class="rec-tip" *ngIf="entry.recommendation && entry.status !== 'ok'">{{ entry.recommendation }}</span>
                     </td>
                   </tr>
                 }
@@ -155,12 +144,88 @@ interface AnalysisGroup {
             </table>
           </div>
         }
+
+        <!-- Ungrouped criteria -->
+        @if (ungroupedEntries.length > 0) {
+          <div class="criterion-group">
+            <h3 class="group-name">Прочее <span class="group-count">({{ filledCountRaw(ungroupedEntries) }}/{{ ungroupedEntries.length }})</span></h3>
+            <table class="criteria-table">
+              <thead><tr><th>Показатель</th><th>Значение</th><th>Статус</th><th>Рекомендация</th></tr></thead>
+              <tbody>
+                @for (entry of ungroupedEntries; track entry.criterion_id) {
+                  <tr class="criterion-row" [class]="'row-' + entry.status">
+                    <td class="criterion-name-cell">{{ entry.criterion_name }}</td>
+                    <td class="value-cell">
+                      @if (editingId === entry.criterion_id) {
+                        <div class="inline-edit">
+                          <input [(ngModel)]="editValue" type="text" class="edit-input" (keyup.enter)="saveValue(entry)" />
+                          <button tuiButton size="xs" appearance="primary" (click)="saveValue(entry)">✓</button>
+                          <button tuiButton size="xs" appearance="ghost" (click)="cancelEdit()">✗</button>
+                        </div>
+                      } @else {
+                        <span class="value-text" *ngIf="entry.value">{{ entry.value }}</span>
+                        <span class="no-value" *ngIf="!entry.value">—</span>
+                        <button tuiButton size="xs" appearance="ghost" (click)="startEdit(entry)" class="edit-btn">✏️</button>
+                      }
+                    </td>
+                    <td><span class="status-badge" [class]="'status-' + entry.status">{{ statusEmoji(entry.status) }} {{ statusLabel(entry.status) }}</span></td>
+                    <td><span class="rec-tip" *ngIf="entry.recommendation && entry.status !== 'ok'">{{ entry.recommendation }}</span></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+
+      <!-- Recommendations Tab -->
+      <section class="card" *ngIf="activeTab === 'recommendations'">
+        <h2 class="section-title">💡 Рекомендации</h2>
+        <div *ngIf="recommendations.length === 0" class="empty">🎉 Все показатели в норме!</div>
+        <div class="rec-list">
+          <div *ngFor="let r of recommendations" class="rec-item" [class]="'rec-' + r.severity">
+            <span class="rec-icon">{{ severityEmoji(r.severity) }}</span>
+            <div class="rec-body">
+              <p class="rec-criterion">{{ r.criterion_name }}</p>
+              <p class="rec-text">{{ r.text }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Weekly Recommendations Tab -->
+      <section class="card" *ngIf="activeTab === 'weekly'">
+        <h2 class="section-title">📅 Рекомендации на неделю
+          <span class="week-label" *ngIf="weekStart"> — с {{ weekStart }}</span>
+        </h2>
+        <div *ngIf="weeklyItems.length === 0" class="empty">🎉 На эту неделю рекомендаций нет — все показатели в норме!</div>
+        <div class="weekly-list">
+          <div *ngFor="let item of weeklyItems" class="weekly-item" [class.spent]="item.weight === 0">
+            <span class="weekly-icon">{{ recTypeEmoji(item.type) }}</span>
+            <div class="weekly-body">
+              <p class="weekly-title" [class.line-through]="item.weight === 0">{{ item.title }}</p>
+              <p class="weekly-criterion" *ngIf="item.criterion_name">{{ item.criterion_name }}</p>
+            </div>
+            <div class="weekly-weight" *ngIf="item.weight > 0">
+              <span class="weight-badge">{{ item.weight }}</span>
+            </div>
+            <div class="weekly-weight" *ngIf="item.weight === 0">
+              <span class="spent-badge">✓ Отправлено</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Chart Tab -->
+      <section class="card chart-card" *ngIf="activeTab === 'chart'">
+        <h2 class="section-title">📈 Визуализация здоровья по группам</h2>
+        <canvas #healthChart class="chart-canvas"></canvas>
       </section>
     </div>
   `,
   styles: [`
     .page {
-      max-width: 900px;
+      max-width: 960px;
       margin: 0 auto;
       padding: 1.5rem 1rem 3rem;
       display: flex;
@@ -183,8 +248,6 @@ interface AnalysisGroup {
     }
 
     /* Progress */
-    .progress-card { }
-
     .progress-header {
       display: flex;
       justify-content: space-between;
@@ -192,18 +255,9 @@ interface AnalysisGroup {
       margin-bottom: 1rem;
     }
 
-    .level-label {
-      color: #64748b;
-      font-size: 0.9rem;
-      margin: 0.25rem 0 0;
-    }
+    .level-label { color: #64748b; font-size: 0.9rem; margin: 0.25rem 0 0; }
 
-    .progress-stats {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
+    .progress-stats { display: flex; align-items: center; gap: 0.5rem; }
     .stat { display: flex; flex-direction: column; align-items: center; }
     .stat-num { font-size: 1.75rem; font-weight: 700; color: #0284c7; }
     .stat-lbl { font-size: 0.75rem; color: #94a3b8; }
@@ -231,45 +285,37 @@ interface AnalysisGroup {
       margin-top: 0.25rem;
     }
 
-    /* Chart */
-    .chart-canvas {
-      max-height: 280px;
-      width: 100%;
-    }
-
-    /* Recommendations */
-    .rec-list { display: flex; flex-direction: column; gap: 0.75rem; }
-
-    .rec-item {
+    /* Tabs */
+    .tabs {
       display: flex;
-      gap: 0.75rem;
-      padding: 0.875rem 1rem;
-      border-radius: 0.75rem;
-      border-left: 3px solid transparent;
-      background: #f8fafc;
+      gap: 0.5rem;
+      flex-wrap: wrap;
     }
 
-    .rec-critical { border-left-color: #ef4444; background: #fef2f2; }
-    .rec-warning  { border-left-color: #f59e0b; background: #fffbeb; }
-    .rec-ok       { border-left-color: #22c55e; background: #f0fdf4; }
-
-    .rec-icon { font-size: 1.25rem; flex-shrink: 0; }
-    .rec-body { flex: 1; }
-
-    .rec-criterion {
-      font-weight: 600;
+    .tab {
+      padding: 0.5rem 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+      background: white;
+      color: #64748b;
       font-size: 0.9rem;
-      margin: 0 0 0.25rem;
-      color: #1e293b;
+      cursor: pointer;
+      transition: all 0.15s;
     }
 
-    .rec-analysis { color: #94a3b8; font-weight: 400; }
-    .rec-text { font-size: 0.85rem; color: #475569; margin: 0; }
+    .tab:hover { background: #f1f5f9; }
 
-    /* Criteria table */
-    .analysis-group { margin-bottom: 2rem; }
+    .tab.active {
+      background: #0284c7;
+      color: white;
+      border-color: #0284c7;
+      font-weight: 600;
+    }
 
-    .analysis-name {
+    /* Criteria groups */
+    .criterion-group { margin-bottom: 2rem; }
+
+    .group-name {
       font-size: 1rem;
       font-weight: 600;
       color: #0284c7;
@@ -277,6 +323,8 @@ interface AnalysisGroup {
       padding-bottom: 0.5rem;
       border-bottom: 2px solid #e0f2fe;
     }
+
+    .group-count { color: #94a3b8; font-weight: 400; font-size: 0.85rem; margin-left: 0.25rem; }
 
     .criteria-table {
       width: 100%;
@@ -302,37 +350,34 @@ interface AnalysisGroup {
     }
 
     .criterion-row:hover { background: #f8fafc; }
-
     .row-critical { background: #fff5f5; }
     .row-warning  { background: #fffdf0; }
 
-    .criterion-name-cell { font-weight: 500; color: #1e293b; }
+    .criterion-name-cell { font-weight: 500; color: #1e293b; display: flex; align-items: center; gap: 0.5rem; }
 
-    .level-badge {
-      display: inline-block;
-      padding: 0.2rem 0.5rem;
-      border-radius: 0.375rem;
-      font-size: 0.75rem;
-      font-weight: 600;
+    .level-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
     }
-
-    .level-1 { background: #dcfce7; color: #15803d; }
-    .level-2 { background: #dbeafe; color: #1d4ed8; }
-    .level-3 { background: #f3e8ff; color: #7c3aed; }
+    .lvl-1 { background: #22c55e; }
+    .lvl-2 { background: #3b82f6; }
+    .lvl-3 { background: #a855f7; }
 
     .value-cell { min-width: 140px; }
-
     .value-text { color: #1e293b; font-weight: 600; }
     .no-value { color: #cbd5e1; }
 
     .inline-edit { display: flex; gap: 0.25rem; align-items: center; }
-    .edit-input { width: 100px; }
-
-    .edit-btn {
-      opacity: 0;
-      transition: opacity 0.15s;
-      margin-left: 0.25rem;
+    .edit-input {
+      width: 100px;
+      padding: 0.25rem 0.5rem;
+      border: 1px solid #0284c7;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
     }
+
+    .edit-btn { opacity: 0; transition: opacity 0.15s; margin-left: 0.25rem; }
     .criterion-row:hover .edit-btn { opacity: 1; }
 
     .status-badge {
@@ -350,6 +395,84 @@ interface AnalysisGroup {
 
     .rec-tip { font-size: 0.8rem; color: #64748b; line-height: 1.4; }
 
+    /* Recommendations */
+    .rec-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .rec-item {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.875rem 1rem;
+      border-radius: 0.75rem;
+      border-left: 3px solid transparent;
+      background: #f8fafc;
+    }
+
+    .rec-critical { border-left-color: #ef4444; background: #fef2f2; }
+    .rec-warning  { border-left-color: #f59e0b; background: #fffbeb; }
+    .rec-ok       { border-left-color: #22c55e; background: #f0fdf4; }
+
+    .rec-icon { font-size: 1.25rem; flex-shrink: 0; }
+    .rec-body { flex: 1; }
+    .rec-criterion { font-weight: 600; font-size: 0.9rem; margin: 0 0 0.25rem; color: #1e293b; }
+    .rec-text { font-size: 0.85rem; color: #475569; margin: 0; }
+
+    /* Weekly */
+    .week-label { font-size: 0.85rem; font-weight: 400; color: #94a3b8; }
+
+    .weekly-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .weekly-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.875rem 1rem;
+      border-radius: 0.75rem;
+      background: #f8fafc;
+      border-left: 3px solid #0284c7;
+    }
+
+    .weekly-item.spent {
+      border-left-color: #cbd5e1;
+      opacity: 0.6;
+    }
+
+    .weekly-icon { font-size: 1.25rem; flex-shrink: 0; }
+    .weekly-body { flex: 1; }
+
+    .weekly-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin: 0 0 0.2rem;
+      color: #1e293b;
+    }
+
+    .line-through { text-decoration: line-through; color: #94a3b8; }
+
+    .weekly-criterion {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin: 0;
+    }
+
+    .weight-badge {
+      display: inline-block;
+      background: #0284c7;
+      color: white;
+      border-radius: 9999px;
+      padding: 0.15rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .spent-badge {
+      font-size: 0.75rem;
+      color: #22c55e;
+      font-weight: 600;
+    }
+
+    /* Chart */
+    .chart-canvas { max-height: 300px; width: 100%; }
+
     .empty {
       text-align: center;
       color: #94a3b8;
@@ -364,12 +487,18 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   private platformId = inject(PLATFORM_ID);
 
   loading = true;
-  progress: any = null;
-  recommendations: Recommendation[] = [];
-  criteriaEntries: CriterionEntry[] = [];
-  analysisGroups: AnalysisGroup[] = [];
+  activeTab = 'criteria';
 
-  // Inline edit state
+  progress: any = null;
+  recommendations: any[] = [];
+  weeklyItems: WeeklyItem[] = [];
+  weekStart = '';
+
+  criteriaEntries: CriterionEntry[] = [];
+  groups: CriterionGroup[] = [];
+  criteriaGroups: GroupWithEntries[] = [];
+  ungroupedEntries: CriterionEntry[] = [];
+
   editingId: string | null = null;
   editValue = '';
 
@@ -379,9 +508,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.loadData();
   }
 
-  ngAfterViewInit(): void {
-    // Chart is initialized after data loads.
-  }
+  ngAfterViewInit(): void {}
 
   loadData(): void {
     this.loading = true;
@@ -391,97 +518,111 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       error: () => {},
     });
 
+    this.api.getRecommendations().subscribe({
+      next: (res: any) => (this.recommendations = res.data || res || []),
+      error: () => {},
+    });
+
+    this.api.getWeeklyRecommendations().subscribe({
+      next: (res: any) => {
+        const d = res.data || res;
+        this.weeklyItems = d.items || [];
+        this.weekStart = d.week_start || '';
+      },
+      error: () => {},
+    });
+
+    this.api.listGroups().subscribe({
+      next: (res: any) => {
+        this.groups = res.data || res || [];
+        this.loadCriteria();
+      },
+      error: () => this.loadCriteria(),
+    });
+  }
+
+  loadCriteria(): void {
     this.api.getUserCriteria().subscribe({
       next: (res: any) => {
-        const entries: CriterionEntry[] = res.data || res;
+        const entries: CriterionEntry[] = res.data || res || [];
         this.criteriaEntries = entries;
-        this.buildAnalysisGroups(entries);
+        this.buildGroups(entries);
         this.loading = false;
-        setTimeout(() => this.renderChart(entries), 50);
+        if (this.activeTab === 'chart') {
+          setTimeout(() => this.renderChart(), 50);
+        }
       },
       error: () => (this.loading = false),
     });
-
-    this.api.getRecommendations().subscribe({
-      next: (res: any) => (this.recommendations = res.data || res),
-      error: () => {},
-    });
   }
 
-  buildAnalysisGroups(entries: CriterionEntry[]): void {
-    const map = new Map<string, AnalysisGroup>();
-    for (const e of entries) {
-      const key = e.analysis_id || 'other';
-      if (!map.has(key)) {
-        map.set(key, { name: e.analysis_name || 'Прочее', entries: [] });
-      }
-      map.get(key)!.entries.push(e);
+  buildGroups(entries: CriterionEntry[]): void {
+    const groupMap = new Map<string, GroupWithEntries>();
+    for (const g of this.groups) {
+      groupMap.set(g.id, { group: g, entries: [] });
     }
-    this.analysisGroups = Array.from(map.values());
+
+    this.ungroupedEntries = [];
+    for (const e of entries) {
+      if (e.group_id && groupMap.has(e.group_id)) {
+        groupMap.get(e.group_id)!.entries.push(e);
+      } else {
+        this.ungroupedEntries.push(e);
+      }
+    }
+
+    this.criteriaGroups = Array.from(groupMap.values()).filter(g => g.entries.length > 0);
   }
 
-  async renderChart(entries: CriterionEntry[]): Promise<void> {
+  async renderChart(): Promise<void> {
     if (!isPlatformBrowser(this.platformId) || !this.chartCanvasRef) return;
 
     const { Chart, registerables } = await import('chart.js');
     Chart.register(...registerables);
 
-    const groups = this.analysisGroups;
-    const labels = groups.map(g => g.name);
-    const filled = groups.map(g => g.entries.filter(e => e.value && e.value !== '').length);
-    const total = groups.map(g => g.entries.length);
-    const pcts = total.map((t, i) => (t > 0 ? Math.round((filled[i] / t) * 100) : 0));
+    const labels = this.criteriaGroups.map(g => g.group.name);
+    const pcts = this.criteriaGroups.map(g => {
+      const total = g.entries.length;
+      const filled = g.entries.filter(e => e.value && e.value !== '').length;
+      return total > 0 ? Math.round((filled / total) * 100) : 0;
+    });
 
-    if (this.chartInstance) {
-      this.chartInstance.destroy();
-    }
+    if (this.chartInstance) this.chartInstance.destroy();
 
     const ctx = this.chartCanvasRef.nativeElement.getContext('2d')!;
     this.chartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
         labels,
-        datasets: [
-          {
-            label: 'Заполнено (%)',
-            data: pcts,
-            backgroundColor: pcts.map(p =>
-              p >= 80 ? 'rgba(34, 197, 94, 0.7)' :
-              p >= 50 ? 'rgba(234, 179, 8, 0.7)' :
-                        'rgba(239, 68, 68, 0.7)'
-            ),
-            borderRadius: 8,
-            borderSkipped: false,
-          },
-        ],
+        datasets: [{
+          label: 'Заполнено (%)',
+          data: pcts,
+          backgroundColor: pcts.map(p =>
+            p >= 80 ? 'rgba(34,197,94,0.7)' : p >= 50 ? 'rgba(234,179,8,0.7)' : 'rgba(239,68,68,0.7)'
+          ),
+          borderRadius: 8,
+          borderSkipped: false,
+        }],
       },
       options: {
         responsive: true,
         plugins: {
           legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: ctx => `${ctx.raw}% заполнено`,
-            },
-          },
+          tooltip: { callbacks: { label: (ctx: any) => `${ctx.raw}% заполнено` } },
         },
         scales: {
-          y: {
-            min: 0,
-            max: 100,
-            ticks: { callback: v => v + '%' },
-            grid: { color: 'rgba(0,0,0,0.05)' },
-          },
-          x: {
-            grid: { display: false },
-            ticks: {
-              maxRotation: 30,
-              font: { size: 11 },
-            },
-          },
+          y: { min: 0, max: 100, ticks: { callback: (v: any) => v + '%' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+          x: { grid: { display: false }, ticks: { maxRotation: 30, font: { size: 11 } } },
         },
       },
     });
+  }
+
+  onTabChange(tab: string): void {
+    this.activeTab = tab;
+    if (tab === 'chart') {
+      setTimeout(() => this.renderChart(), 50);
+    }
   }
 
   startEdit(entry: CriterionEntry): void {
@@ -506,28 +647,39 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     });
   }
 
+  filledCount(gw: GroupWithEntries): number {
+    return gw.entries.filter(e => e.value && e.value !== '').length;
+  }
+
+  filledCountRaw(entries: CriterionEntry[]): number {
+    return entries.filter(e => e.value && e.value !== '').length;
+  }
+
+  formatValue(entry: CriterionEntry): string {
+    if (!entry.value) return '';
+    if (entry.input_type === 'check' || entry.input_type === 'boolean') {
+      return entry.value === '1' ? '✅' : '❌';
+    }
+    return entry.value;
+  }
+
   statusEmoji(status: string): string {
-    const map: Record<string, string> = {
-      ok: '✅', warning: '⚠️', critical: '🔴', empty: '⚪',
-    };
+    const map: Record<string, string> = { ok: '✅', warning: '⚠️', critical: '🔴', empty: '⚪' };
     return map[status] || '⚪';
   }
 
   statusLabel(status: string): string {
-    const map: Record<string, string> = {
-      ok: 'Норма', warning: 'Внимание', critical: 'Критично', empty: 'Нет данных',
-    };
+    const map: Record<string, string> = { ok: 'Норма', warning: 'Внимание', critical: 'Критично', empty: 'Нет данных' };
     return map[status] || status;
   }
 
   severityEmoji(severity: string): string {
-    const map: Record<string, string> = {
-      critical: '🔴', warning: '⚠️', ok: '✅',
-    };
+    const map: Record<string, string> = { critical: '🔴', warning: '⚠️', ok: '✅' };
     return map[severity] || '💡';
   }
 
-  levelLabel(level: number): string {
-    return level === 1 ? '⭐ Базовый' : level === 2 ? '⭐⭐ Продвинутый' : '⭐⭐⭐ Долголетие';
+  recTypeEmoji(type: string): string {
+    const map: Record<string, string> = { reminder: '🔔', recommendation: '💡', alarm: '🚨', expiration_reminder: '⏰' };
+    return map[type] || '💡';
   }
 }

@@ -1,12 +1,14 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { TuiButton } from '@taiga-ui/core';
 import { AuthService } from '../../core/services/auth.service';
+import { ApiService } from '../../core/services/api.service';
 
 @Component({
   selector: 'app-nav',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, TuiButton],
+  imports: [RouterLink, RouterLinkActive, TuiButton, CommonModule],
   template: `
     <nav class="navbar">
       <div class="nav-brand">
@@ -19,6 +21,9 @@ import { AuthService } from '../../core/services/auth.service';
         </a>
         <a routerLink="/profile" routerLinkActive="active" class="nav-link">
           👤 Профиль
+        </a>
+        <a *ngIf="isAdmin" routerLink="/admin" routerLinkActive="active" class="nav-link admin-link">
+          ⚙️ Админ
         </a>
       </div>
       <button tuiButton appearance="ghost" size="s" (click)="logout()">Выйти</button>
@@ -45,9 +50,7 @@ import { AuthService } from '../../core/services/auth.service';
       text-decoration: none;
     }
 
-    .nav-logo {
-      font-size: 1.5rem;
-    }
+    .nav-logo { font-size: 1.5rem; }
 
     .nav-title {
       font-weight: 700;
@@ -69,20 +72,34 @@ import { AuthService } from '../../core/services/auth.service';
       transition: all 0.15s;
     }
 
-    .nav-link:hover {
-      background: #f1f5f9;
-      color: #0f172a;
-    }
+    .nav-link:hover { background: #f1f5f9; color: #0f172a; }
 
     .nav-link.active {
       background: #e0f2fe;
       color: #0284c7;
       font-weight: 600;
     }
+
+    .admin-link.active { background: #fef3c7; color: #92400e; }
   `],
 })
-export class NavComponent {
+export class NavComponent implements OnInit {
   private auth = inject(AuthService);
+  private api = inject(ApiService);
+
+  isAdmin = false;
+
+  ngOnInit(): void {
+    if (this.auth.isAuthenticated()) {
+      this.api.getMe().subscribe({
+        next: (res: any) => {
+          const u = res.data || res;
+          this.isAdmin = u?.is_admin === true;
+        },
+        error: () => {},
+      });
+    }
+  }
 
   logout(): void {
     this.auth.logout();

@@ -1,9 +1,20 @@
-import { Component, OnInit, OnDestroy, inject, PLATFORM_ID } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  PLATFORM_ID,
+} from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  Validators,
+} from '@angular/forms';
 import { TuiButton, TuiLoader, TuiTextfield } from '@taiga-ui/core';
-import { Subscription } from 'rxjs';
+import { interval, Subscription } from 'rxjs';
+import { switchMap, takeWhile } from 'rxjs/operators';
 
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -12,82 +23,135 @@ import { WebsocketService, WsMessage } from '../../core/services/websocket.servi
 @Component({
   selector: 'app-auth',
   standalone: true,
-  imports: [CommonModule, TuiButton, TuiLoader, FormsModule, TuiTextfield],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    TuiButton,
+    TuiLoader,
+    TuiTextfield,
+  ],
   template: `
     <div class="auth-page">
       <div class="auth-card">
-        <div class="auth-logo">
-          <span class="logo-icon">🏥</span>
+        <!-- Logo -->
+        <div class="auth-header">
+          <span class="logo-mark">❤️</span>
           <h1>ЗдравоШаг</h1>
-          <p class="tagline">Следите за здоровьем вместе с нами</p>
+          <p class="tagline">Следите за здоровьем — просто и бесплатно</p>
         </div>
 
+        <!-- Token processing -->
         @if (tokenProcessing) {
-          <div class="token-processing">
+          <div class="status-block">
             <tui-loader />
             <p>Выполняется вход...</p>
           </div>
         }
 
         @if (!tokenProcessing) {
-          <!-- Bot Auth -->
+
+          <!-- === Bot Auth === -->
           <div class="auth-section">
-            <h2>Войти через мессенджер</h2>
-            <p class="auth-desc">
-              Откройте бота в Telegram или MAX, поделитесь номером телефона — и вы в системе.
+            <div class="section-label">
+              <span class="section-num">1</span>
+              Войти через мессенджер
+            </div>
+            <p class="hint">
+              Откройте бота, поделитесь номером телефона — и вы в системе.
             </p>
 
             @if (loadingChallenge) {
-              <tui-loader class="loader" />
-              <p class="auth-status">Подготовка ссылки...</p>
+              <div class="status-row">
+                <tui-loader size="s" />
+                <span>Подготовка ссылки...</span>
+              </div>
+            }
+
+            @if (challengeError) {
+              <div class="error-msg">{{ challengeError }}</div>
+              <button tuiButton appearance="outline" size="s" (click)="retryChallenge()" style="margin-top:0.5rem">
+                Попробовать снова
+              </button>
             }
 
             @if (tgUrl && !authenticated) {
               <div class="bot-links">
                 <a [href]="tgUrl" target="_blank" tuiButton appearance="primary" size="l">
-                  📱 Открыть в Telegram
+                  ✈️ &nbsp;Telegram
                 </a>
-                <a [href]="maxUrl" target="_blank" tuiButton appearance="secondary" size="l">
-                  💬 Открыть в MAX
-                </a>
+                @if (maxUrl) {
+                  <a [href]="maxUrl" target="_blank" tuiButton appearance="secondary" size="l">
+                    💬 &nbsp;MAX
+                  </a>
+                }
               </div>
-              <div class="waiting">
+              <div class="status-row muted">
                 <tui-loader size="xs" />
-                <span>Ожидание подтверждения через бота...</span>
+                <span>Ожидание подтверждения...</span>
               </div>
             }
           </div>
 
-          <div class="divider">
-            <span>или</span>
-          </div>
+          <!-- Divider -->
+          <div class="divider"><span>или</span></div>
 
-          <!-- Phone+Password Auth -->
+          <!-- === Password Auth === -->
           <div class="auth-section">
-            <h2>Войти по паролю</h2>
-            <p class="auth-desc">Используйте номер телефона и пароль из приложения.</p>
+            <div class="section-label">
+              <span class="section-num">2</span>
+              Войти по паролю
+            </div>
+            <p class="hint">Номер телефона и пароль, полученный при регистрации через бота.</p>
 
-            <div class="form-group">
-              <input
-                tuiTextfield
-                type="tel"
-                placeholder="+7 999 000-00-00"
-                [(ngModel)]="phone"
-                class="auth-input"
-              />
-              <input
-                tuiTextfield
-                type="password"
-                placeholder="Пароль"
-                [(ngModel)]="password"
-                class="auth-input"
-              />
+            <form [formGroup]="loginForm" (ngSubmit)="loginWithPassword()" class="form">
+              <div class="field">
+                <label class="field-label">Телефон</label>
+                <input
+                  tuiTextfield
+                  type="tel"
+                  formControlName="phone"
+                  placeholder="+7 999 000-00-00"
+                  autocomplete="tel"
+                  class="tui-input"
+                />
+                @if (loginForm.get('phone')?.touched && loginForm.get('phone')?.invalid) {
+                  <span class="field-error">Введите номер в формате +7...</span>
+                }
+              </div>
+
+              <div class="field">
+                <label class="field-label">Пароль</label>
+                <div class="pwd-wrap">
+                  <input
+                    tuiTextfield
+                    [type]="showPassword ? 'text' : 'password'"
+                    formControlName="password"
+                    placeholder="Пароль"
+                    autocomplete="current-password"
+                    class="tui-input"
+                  />
+                  <button
+                    type="button"
+                    class="pwd-toggle"
+                    (click)="showPassword = !showPassword"
+                    tabindex="-1"
+                  >{{ showPassword ? '🙈' : '👁️' }}</button>
+                </div>
+                @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
+                  <span class="field-error">Минимум 4 символа</span>
+                }
+              </div>
+
+              @if (loginError) {
+                <div class="error-msg">{{ loginError }}</div>
+              }
+
               <button
                 tuiButton
                 appearance="primary"
                 size="l"
-                [disabled]="loginLoading"
-                (click)="loginWithPassword()"
+                type="submit"
+                [disabled]="loginLoading || loginForm.invalid"
                 class="submit-btn"
               >
                 @if (loginLoading) {
@@ -96,60 +160,60 @@ import { WebsocketService, WsMessage } from '../../core/services/websocket.servi
                   Войти
                 }
               </button>
-            </div>
-
-            @if (loginError) {
-              <p class="auth-error">{{ loginError }}</p>
-            }
+            </form>
           </div>
 
           @if (authenticated) {
-            <p class="auth-success">✅ Авторизация успешна! Перенаправление...</p>
-          }
-
-          @if (challengeError) {
-            <p class="auth-error">{{ challengeError }}</p>
-            <button tuiButton appearance="secondary" (click)="retryChallenge()">
-              Попробовать снова
-            </button>
+            <div class="success-block">
+              <span>✅</span>
+              <p>Авторизация прошла успешно! Перенаправление...</p>
+            </div>
           }
         }
       </div>
     </div>
   `,
   styles: [`
+    :host {
+      --brand: #2563eb;
+      --brand-dark: #1d4ed8;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+
     .auth-page {
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 2rem;
-      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      padding: 2rem 1rem;
+      background: linear-gradient(150deg, #eff6ff 0%, #e0f2fe 60%, #f0fdf4 100%);
     }
 
     .auth-card {
       max-width: 440px;
       width: 100%;
       background: white;
-      border-radius: 1.5rem;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+      border-radius: 1.25rem;
+      box-shadow: 0 12px 48px rgba(37,99,235,0.12);
       overflow: hidden;
     }
 
-    .auth-logo {
+    .auth-header {
       text-align: center;
-      padding: 2.5rem 2rem 1.5rem;
-      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      padding: 2.5rem 2rem 1.75rem;
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
       color: white;
     }
 
-    .logo-icon {
-      font-size: 3rem;
+    .logo-mark {
+      font-size: 2.5rem;
       display: block;
       margin-bottom: 0.5rem;
     }
 
-    .auth-logo h1 {
+    .auth-header h1 {
       margin: 0 0 0.25rem;
       font-size: 1.75rem;
       font-weight: 700;
@@ -157,42 +221,72 @@ import { WebsocketService, WsMessage } from '../../core/services/websocket.servi
 
     .tagline {
       margin: 0;
-      opacity: 0.85;
-      font-size: 0.9rem;
+      opacity: 0.8;
+      font-size: 0.875rem;
     }
 
     .auth-section {
-      padding: 1.5rem 2rem;
+      padding: 1.75rem 2rem;
     }
 
-    .auth-section h2 {
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
       font-size: 1rem;
       font-weight: 600;
-      margin: 0 0 0.5rem;
-      color: #1e293b;
+      color: var(--text);
+      margin-bottom: 0.5rem;
     }
 
-    .auth-desc {
-      opacity: 0.6;
-      font-size: 0.875rem;
-      margin: 0 0 1rem;
-      line-height: 1.5;
+    .section-num {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      background: var(--brand);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
+
+    .hint {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin: 0 0 1.25rem;
+      line-height: 1.55;
+    }
+
+    .status-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 2rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    .status-row.muted { justify-content: center; }
 
     .bot-links {
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
-      margin-bottom: 1rem;
-    }
-
-    .waiting {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      opacity: 0.6;
-      font-size: 0.8rem;
+      margin-bottom: 0.5rem;
     }
 
     .divider {
@@ -209,55 +303,83 @@ import { WebsocketService, WsMessage } from '../../core/services/websocket.servi
       content: '';
       flex: 1;
       height: 1px;
-      background: #e2e8f0;
+      background: var(--border);
     }
 
-    .form-group {
+    .form {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .auth-input {
-      width: 100%;
-    }
-
-    .submit-btn {
-      width: 100%;
-    }
-
-    .auth-success {
-      color: #16a34a;
-      font-weight: 600;
-      text-align: center;
-      padding: 1rem 2rem;
-    }
-
-    .auth-error {
-      color: #dc2626;
-      font-size: 0.875rem;
-      margin: 0.5rem 0 0;
-      text-align: center;
-    }
-
-    .loader {
-      margin-bottom: 0.5rem;
-    }
-
-    .auth-status {
-      opacity: 0.6;
-      text-align: center;
-      font-size: 0.875rem;
-    }
-
-    .token-processing {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       gap: 1rem;
-      padding: 3rem 2rem;
-      text-align: center;
     }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .field-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .tui-input {
+      width: 100%;
+    }
+
+    .pwd-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .pwd-wrap .tui-input {
+      padding-right: 2.5rem;
+    }
+
+    .pwd-toggle {
+      position: absolute;
+      right: 0.75rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0;
+      color: var(--text-muted);
+    }
+
+    .field-error {
+      font-size: 0.78rem;
+      color: #dc2626;
+    }
+
+    .error-msg {
+      font-size: 0.875rem;
+      color: #dc2626;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 0.5rem;
+      padding: 0.6rem 0.875rem;
+    }
+
+    .submit-btn { width: 100%; }
+
+    .success-block {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1.25rem 2rem 1.5rem;
+      font-size: 0.9rem;
+      color: #15803d;
+      font-weight: 500;
+    }
+
+    .success-block span { font-size: 1.25rem; }
+    .success-block p { margin: 0; }
   `],
 })
 export class AuthComponent implements OnInit, OnDestroy {
@@ -267,23 +389,26 @@ export class AuthComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private platformId = inject(PLATFORM_ID);
+  private fb = inject(FormBuilder);
 
   loadingChallenge = false;
   tgUrl: string | null = null;
   maxUrl: string | null = null;
   authenticated = false;
   challengeError: string | null = null;
+  tokenProcessing = false;
+  showPassword = false;
 
-  // Phone + password login
-  phone = '';
-  password = '';
   loginLoading = false;
   loginError: string | null = null;
 
-  // One-time token from URL
-  tokenProcessing = false;
+  loginForm = this.fb.group({
+    phone: ['', [Validators.required, Validators.pattern(/^\+\d{10,15}$/)]],
+    password: ['', [Validators.required, Validators.minLength(4)]],
+  });
 
   private wsSub: Subscription | null = null;
+  private pollSub: Subscription | null = null;
 
   ngOnInit(): void {
     if (this.auth.isAuthenticated()) {
@@ -291,7 +416,6 @@ export class AuthComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Check for one-time token in URL query params.
     if (isPlatformBrowser(this.platformId)) {
       const token = this.route.snapshot.queryParamMap.get('token');
       if (token) {
@@ -306,12 +430,12 @@ export class AuthComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.ws.disconnect();
     this.wsSub?.unsubscribe();
+    this.pollSub?.unsubscribe();
   }
 
-  /** Handles the one-time login token sent in the bot notification link. */
   processOneTimeToken(token: string): void {
     this.tokenProcessing = true;
-    // Validate the token via API, then store it.
+    this.auth.setAuth(token, '');
     this.api.getMe().subscribe({
       next: (res: any) => {
         const data = res.data || res;
@@ -320,19 +444,17 @@ export class AuthComponent implements OnInit, OnDestroy {
         this.router.navigateByUrl('/dashboard');
       },
       error: () => {
-        // Token invalid or expired, fall through to normal auth.
+        this.auth.clearAuth();
         this.tokenProcessing = false;
         this.startChallenge();
       },
     });
-
-    // Store the token temporarily to use in the API call.
-    this.auth.setAuth(token, '');
   }
 
   startChallenge(): void {
     this.loadingChallenge = true;
     this.challengeError = null;
+    this.pollSub?.unsubscribe();
 
     this.api.browserChallenge().subscribe({
       next: (res: any) => {
@@ -342,16 +464,29 @@ export class AuthComponent implements OnInit, OnDestroy {
         this.maxUrl = data.max_bot_url;
 
         if (isPlatformBrowser(this.platformId)) {
+          // Primary: WebSocket
           this.wsSub = this.ws.connect(data.key).subscribe({
             next: (msg: WsMessage) => {
               if (msg.type === 'auth' && msg.token) {
-                this.auth.setAuth(msg.token, msg.user_id || '');
-                this.authenticated = true;
-                this.ws.disconnect();
-                setTimeout(() => this.router.navigateByUrl('/dashboard'), 500);
+                this.finishAuth(msg.token, msg.user_id || '');
               }
             },
           });
+
+          // Fallback: poll every 3 s
+          this.pollSub = interval(3000)
+            .pipe(
+              switchMap(() => this.api.checkAuthKey(data.key)),
+              takeWhile(() => !this.authenticated, true),
+            )
+            .subscribe({
+              next: (pollRes: any) => {
+                const d = pollRes.data || pollRes;
+                if (d?.token) {
+                  this.finishAuth(d.token, d.user_id || '');
+                }
+              },
+            });
         }
       },
       error: () => {
@@ -364,22 +499,46 @@ export class AuthComponent implements OnInit, OnDestroy {
   retryChallenge(): void {
     this.ws.disconnect();
     this.wsSub?.unsubscribe();
+    this.pollSub?.unsubscribe();
+    this.tgUrl = null;
+    this.maxUrl = null;
     this.startChallenge();
   }
 
   loginWithPassword(): void {
-    if (!this.phone || !this.password) {
-      this.loginError = 'Введите номер телефона и пароль';
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
       return;
     }
+
+    const { phone, password } = this.loginForm.value;
     this.loginLoading = true;
     this.loginError = null;
 
-    // Phone+password login is not yet implemented on the backend.
-    // TODO: implement when backend /auth/login endpoint is ready.
-    setTimeout(() => {
-      this.loginLoading = false;
-      this.loginError = 'Вход по паролю временно недоступен. Используйте вход через мессенджер.';
-    }, 500);
+    this.api.loginWithPassword(phone!, password!).subscribe({
+      next: (res: any) => {
+        const data = res.data || res;
+        this.loginLoading = false;
+        if (data?.token) {
+          this.finishAuth(data.token, data.user_id || '');
+        } else {
+          this.loginError = 'Неверный номер телефона или пароль';
+        }
+      },
+      error: (err: any) => {
+        this.loginLoading = false;
+        const msg = err?.error?.message || err?.error?.error;
+        this.loginError = msg || 'Неверный номер телефона или пароль';
+      },
+    });
+  }
+
+  private finishAuth(token: string, userId: string): void {
+    if (this.authenticated) return;
+    this.authenticated = true;
+    this.auth.setAuth(token, userId);
+    this.ws.disconnect();
+    this.pollSub?.unsubscribe();
+    setTimeout(() => this.router.navigateByUrl('/dashboard'), 600);
   }
 }

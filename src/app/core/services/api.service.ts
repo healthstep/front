@@ -12,6 +12,14 @@ export class ApiService {
     return this.http.post(`${this.base}/auth/browser-challenge`, {});
   }
 
+  checkAuthKey(key: string): Observable<any> {
+    return this.http.get(`${this.base}/auth/check?key=${key}`);
+  }
+
+  loginWithPassword(phone: string, password: string): Observable<any> {
+    return this.http.post(`${this.base}/auth/login`, { phone, password });
+  }
+
   getMe(): Observable<any> {
     return this.http.get(`${this.base}/users/me`);
   }

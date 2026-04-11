@@ -68,12 +68,15 @@ export class AuthComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (isPlatformBrowser(this.platformId)) {
-      const token = this.route.snapshot.queryParamMap.get('token');
-      if (token) {
-        this.processOneTimeToken(token);
-        return;
-      }
+    // All auth flows require the browser — skip entirely during SSR.
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    const token = this.route.snapshot.queryParamMap.get('token');
+    if (token) {
+      this.processOneTimeToken(token);
+      return;
     }
 
     this.startChallenge();
@@ -106,6 +109,8 @@ export class AuthComponent implements OnInit, OnDestroy {
   startChallenge(): void {
     this.loadingChallenge = true;
     this.challengeError = null;
+    this.tgUrl = null;
+    this.maxUrl = null;
     this.pollSub?.unsubscribe();
 
     this.api.browserChallenge().subscribe({

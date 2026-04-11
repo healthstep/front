@@ -18,9 +18,22 @@
   flex-shrink: 0;
 }
 
+.nav-logo-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #38B6FF;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
 .nav-logo-img {
-  height: 32px;
-  width: auto;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 

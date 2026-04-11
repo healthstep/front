@@ -30,11 +30,24 @@
   background: var(--brand);
 }
 
+.auth-logo-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #38B6FF;
+  border: 4px solid rgba(255, 255, 255, 0.35);
+  overflow: hidden;
+  margin: 0 auto 0.75rem;
+}
+
 .auth-logo {
-  height: 52px;
-  width: auto;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   display: block;
-  margin: 0 auto 0.625rem;
 }
 
 .tagline {

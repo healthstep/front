@@ -1,0 +1,91 @@
+<app-nav />
+<div class="page">
+  <div class="card">
+    <h2 class="page-title">👤 Профиль</h2>
+
+    @if (loading) {
+      <tui-loader />
+    }
+
+    @if (!loading && user) {
+      <div class="profile-avatar">
+        <div class="avatar-circle">{{ initials }}</div>
+      </div>
+
+      <div class="profile-info">
+        <div class="field-group">
+          <label class="field-label">Имя</label>
+          @if (editingName) {
+            <div class="field-edit">
+              <input tuiTextfield [(ngModel)]="displayName" type="text" />
+              <button tuiButton size="s" appearance="primary" (click)="saveName()" [disabled]="saving">
+                @if (saving) { <tui-loader size="xs" /> } @else { Сохранить }
+              </button>
+              <button tuiButton size="s" appearance="ghost" (click)="cancelNameEdit()">Отмена</button>
+            </div>
+          } @else {
+            <div class="field-value">
+              <span>{{ user.display_name || 'Не указано' }}</span>
+              <button tuiButton size="xs" appearance="ghost" (click)="editingName = true">✏️</button>
+            </div>
+          }
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Телефон</label>
+          <div class="field-value">
+            <span>{{ user.phone_e164 || '—' }}</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Дата рождения</label>
+          @if (editingBirth) {
+            <div class="field-edit">
+              <input tuiTextfield [(ngModel)]="birthDate" type="date" />
+              <button tuiButton size="s" appearance="primary" (click)="saveBirth()" [disabled]="saving">
+                @if (saving) { <tui-loader size="xs" /> } @else { Сохранить }
+              </button>
+              <button tuiButton size="s" appearance="ghost" (click)="cancelBirthEdit()">Отмена</button>
+            </div>
+          } @else {
+            <div class="field-value">
+              <span>{{ user.birth_date || 'Не указана' }}</span>
+              <button tuiButton size="xs" appearance="ghost" (click)="startBirthEdit()">✏️</button>
+            </div>
+          }
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Пол</label>
+          @if (editingSex) {
+            <div class="field-edit">
+              <select [(ngModel)]="sex" class="sex-select">
+                <option value="">Не указан</option>
+                <option value="male">Мужской</option>
+                <option value="female">Женский</option>
+              </select>
+              <button tuiButton size="s" appearance="primary" (click)="saveSex()" [disabled]="saving">
+                @if (saving) { <tui-loader size="xs" /> } @else { Сохранить }
+              </button>
+              <button tuiButton size="s" appearance="ghost" (click)="editingSex = false">Отмена</button>
+            </div>
+          } @else {
+            <div class="field-value">
+              <span>{{ sexLabel(user.sex) }}</span>
+              <button tuiButton size="xs" appearance="ghost" (click)="editingSex = true">✏️</button>
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (saveError) {
+        <p class="error">{{ saveError }}</p>
+      }
+
+      @if (saveSuccess) {
+        <p class="success">✅ Профиль обновлён!</p>
+      }
+    }
+  </div>
+</div>

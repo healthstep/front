@@ -1,0 +1,141 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <!-- Logo -->
+    <div class="auth-header">
+      <span class="logo-mark">❤️</span>
+      <h1>ЗдравоШаг</h1>
+      <p class="tagline">Следите за здоровьем — просто и бесплатно</p>
+    </div>
+
+    <!-- Token processing -->
+    @if (tokenProcessing) {
+      <div class="status-block">
+        <tui-loader />
+        <p>Выполняется вход...</p>
+      </div>
+    }
+
+    @if (!tokenProcessing) {
+
+      <!-- === Bot Auth === -->
+      <div class="auth-section">
+        <div class="section-label">
+          <span class="section-num">1</span>
+          Войти через мессенджер
+        </div>
+        <p class="hint">
+          Откройте бота, поделитесь номером телефона — и вы в системе.
+        </p>
+
+        @if (loadingChallenge) {
+          <div class="status-row">
+            <tui-loader size="s" />
+            <span>Подготовка ссылки...</span>
+          </div>
+        }
+
+        @if (challengeError) {
+          <div class="error-msg">{{ challengeError }}</div>
+          <button tuiButton appearance="outline" size="s" (click)="retryChallenge()" style="margin-top:0.5rem">
+            Попробовать снова
+          </button>
+        }
+
+        @if (tgUrl && !authenticated) {
+          <div class="bot-links">
+            <a [href]="tgUrl" target="_blank" tuiButton appearance="primary" size="l">
+              ✈️ &nbsp;Telegram
+            </a>
+            @if (maxUrl) {
+              <a [href]="maxUrl" target="_blank" tuiButton appearance="secondary" size="l">
+                💬 &nbsp;MAX
+              </a>
+            }
+          </div>
+          <div class="status-row muted">
+            <tui-loader size="xs" />
+            <span>Ожидание подтверждения...</span>
+          </div>
+        }
+      </div>
+
+      <!-- Divider -->
+      <div class="divider"><span>или</span></div>
+
+      <!-- === Password Auth === -->
+      <div class="auth-section">
+        <div class="section-label">
+          <span class="section-num">2</span>
+          Войти по паролю
+        </div>
+        <p class="hint">Номер телефона и пароль, полученный при регистрации через бота.</p>
+
+        <form [formGroup]="loginForm" (ngSubmit)="loginWithPassword()" class="form">
+          <div class="field">
+            <label class="field-label">Телефон</label>
+            <input
+              tuiTextfield
+              type="tel"
+              formControlName="phone"
+              placeholder="+7 999 000-00-00"
+              autocomplete="tel"
+              class="tui-input"
+            />
+            @if (loginForm.get('phone')?.touched && loginForm.get('phone')?.invalid) {
+              <span class="field-error">Введите номер в формате +7...</span>
+            }
+          </div>
+
+          <div class="field">
+            <label class="field-label">Пароль</label>
+            <div class="pwd-wrap">
+              <input
+                tuiTextfield
+                [type]="showPassword ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="Пароль"
+                autocomplete="current-password"
+                class="tui-input"
+              />
+              <button
+                type="button"
+                class="pwd-toggle"
+                (click)="showPassword = !showPassword"
+                tabindex="-1"
+              >{{ showPassword ? '🙈' : '👁️' }}</button>
+            </div>
+            @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
+              <span class="field-error">Минимум 4 символа</span>
+            }
+          </div>
+
+          @if (loginError) {
+            <div class="error-msg">{{ loginError }}</div>
+          }
+
+          <button
+            tuiButton
+            appearance="primary"
+            size="l"
+            type="submit"
+            [disabled]="loginLoading || loginForm.invalid"
+            class="submit-btn"
+          >
+            @if (loginLoading) {
+              <tui-loader size="xs" />
+            } @else {
+              Войти
+            }
+          </button>
+        </form>
+      </div>
+
+      @if (authenticated) {
+        <div class="success-block">
+          <span>✅</span>
+          <p>Авторизация прошла успешно! Перенаправление...</p>
+        </div>
+      }
+    }
+  </div>
+</div>

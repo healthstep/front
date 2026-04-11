@@ -1,0 +1,21 @@
+<nav class="navbar">
+  <div class="nav-brand">
+    <span class="nav-logo">🏥</span>
+    <span class="nav-title">ЗдравоШаг</span>
+  </div>
+  <div class="nav-links">
+    <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+      📊 Прогресс
+    </a>
+    <a routerLink="/profile" routerLinkActive="active" class="nav-link">
+      👤 Профиль
+    </a>
+    <a *ngIf="isAdmin" routerLink="/admin" routerLinkActive="active" class="nav-link admin-link">
+      ⚙️ Админ
+    </a>
+    @if (navLoading) {
+      <span class="nav-loader"><tui-loader size="xs" /></span>
+    }
+  </div>
+  <button tuiButton appearance="ghost" size="s" (click)="logout()">Выйти</button>
+</nav>

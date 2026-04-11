@@ -12,7 +12,7 @@ import {
   FormBuilder,
   Validators,
 } from '@angular/forms';
-import { TuiButton, TuiLoader, TuiTextfield } from '@taiga-ui/core';
+import { TuiButton, TuiLoader, TuiTextfield, TuiIcon } from '@taiga-ui/core';
 import { interval, Subscription } from 'rxjs';
 import { switchMap, takeWhile } from 'rxjs/operators';
 
@@ -29,6 +29,7 @@ import { WebsocketService, WsMessage } from '../../core/services/websocket.servi
     TuiButton,
     TuiLoader,
     TuiTextfield,
+    TuiIcon,
   ],
   templateUrl: './auth.component.html',
   styleUrl: './auth.component.scss',

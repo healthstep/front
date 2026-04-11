@@ -3,8 +3,12 @@
   <!-- Hero -->
   <header class="hero">
     <div class="hero-content">
-      <div class="hero-badge">🇷🇺 90% показателей доступны бесплатно</div>
-      <h1 class="hero-title">ЗдравоШаг</h1>
+      <div class="hero-badge">
+        <tui-icon icon="@tui.shield" class="badge-icon" />
+        90% показателей доступны бесплатно по ОМС
+      </div>
+      <img src="logo.png" alt="ЗОШ" class="hero-logo" />
+      <p class="hero-tagline">ШАГ ЗА ШАГОМ К ЗДОРОВЬЮ</p>
       <p class="hero-subtitle">
         Храните результаты анализов, отслеживайте нормы и получайте
         персональные рекомендации — без очередей и лишних трат.
@@ -14,7 +18,7 @@
           Войти / Зарегистрироваться
         </a>
       </div>
-      <p class="hero-note">Бесплатно · Занимает 2 минуты</p>
+      <p class="hero-note">Бесплатно · 2 минуты на старт</p>
     </div>
     <div class="hero-visual">
       <div class="health-card">
@@ -34,7 +38,7 @@
     </div>
   </header>
 
-  <!-- Stats / Trust bar -->
+  <!-- Stats bar -->
   <section class="stats-bar">
     <div class="stat">
       <span class="stat-num">90%</span>
@@ -52,7 +56,7 @@
     </div>
   </section>
 
-  <!-- Reality check -->
+  <!-- Reality section -->
   <section class="section reality">
     <div class="reality-content">
       <div class="reality-text">
@@ -72,7 +76,7 @@
           </div>
         </div>
         <p class="reality-call">
-          ЗдравоШаг не заменяет врача — он помогает <strong>замечать отклонения до того, как они станут проблемой</strong>.
+          ЗОШ не заменяет врача — он помогает <strong>замечать отклонения до того, как они станут проблемой</strong>.
           Просто вносите данные из анализов раз в несколько месяцев.
         </p>
       </div>
@@ -117,7 +121,9 @@
   <!-- Free indicators -->
   <section class="section free-section">
     <div class="free-card">
-      <div class="free-icon">🏥</div>
+      <div class="free-icon-wrap">
+        <tui-icon icon="@tui.shield" class="free-icon" />
+      </div>
       <div class="free-text">
         <h2>Большинство анализов в России бесплатны</h2>
         <p>
@@ -138,32 +144,44 @@
     <h2 class="section-title">Возможности</h2>
     <div class="feature-grid">
       <div class="feature-card">
-        <div class="feature-icon">📊</div>
+        <div class="feature-icon-wrap">
+          <tui-icon icon="@tui.trending-up" />
+        </div>
         <h3>Нормы и отклонения</h3>
         <p>Автоматическая проверка: в норме или есть повод обратиться к врачу.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">🔔</div>
+        <div class="feature-icon-wrap">
+          <tui-icon icon="@tui.bell" />
+        </div>
         <h3>Напоминания</h3>
         <p>Уведомление, когда анализы устарели или пора обновить показатель.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">💡</div>
+        <div class="feature-icon-wrap">
+          <tui-icon icon="@tui.info" />
+        </div>
         <h3>Персональные советы</h3>
         <p>Рекомендация дня на основе ваших реальных данных — питание, активность, профилактика.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">📈</div>
+        <div class="feature-icon-wrap">
+          <tui-icon icon="@tui.bar-chart-2" />
+        </div>
         <h3>Дашборд здоровья</h3>
         <p>Все показатели в одном месте: статусы, история, прогресс заполнения.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">🔒</div>
+        <div class="feature-icon-wrap">
+          <tui-icon icon="@tui.lock" />
+        </div>
         <h3>Приватность</h3>
         <p>Данные принадлежат только вам. Никаких посторонних рассылок.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">📋</div>
+        <div class="feature-icon-wrap">
+          <tui-icon icon="@tui.list" />
+        </div>
         <h3>Группы показателей</h3>
         <p>Кровь, биохимия, давление, гормоны, визиты — всё структурировано по категориям.</p>
       </div>
@@ -185,7 +203,7 @@
   <footer class="footer">
     <div class="footer-grid">
       <div class="footer-col">
-        <span class="footer-logo">❤️ ЗдравоШаг</span>
+        <img src="logo.png" alt="ЗОШ" class="footer-logo-img" />
         <p>Персональный трекер здоровья.</p>
       </div>
       <div class="footer-col">
@@ -198,12 +216,17 @@
       <div class="footer-col">
         <h4>Поддержка</h4>
         <ul>
-          <li><a href="https://t.me/vladimirialymov" target="_blank">✉️ Написать</a></li>
+          <li>
+            <a href="https://t.me/vladimirialymov" target="_blank">
+              <tui-icon icon="@tui.send" class="footer-link-icon" />
+              Написать
+            </a>
+          </li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© {{ currentYear }} ЗдравоШаг. Сделано с ❤️ для вашего здоровья.</span>
+      <span>© {{ currentYear }} ЗОШ — Шаг за шагом к здоровью</span>
     </div>
   </footer>
 </div>

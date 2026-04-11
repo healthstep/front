@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit, inject, ElementRef, ViewChild, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TuiButton, TuiLoader } from '@taiga-ui/core';
+import { TuiButton, TuiLoader, TuiIcon } from '@taiga-ui/core';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { NavComponent } from '../../shared/nav/nav.component';
@@ -42,7 +42,7 @@ interface WeeklyItem {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, TuiButton, TuiLoader, NavComponent, FormsModule],
+  imports: [CommonModule, TuiButton, TuiLoader, TuiIcon, NavComponent, FormsModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
@@ -70,6 +70,9 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   editingId: string | null = null;
   editValue = '';
+  editMeasuredAt = '';
+  confirmEdit: string | null = null;
+  today = new Date().toISOString().split('T')[0];
 
   private chartInstance: any = null;
 
@@ -218,19 +221,36 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   }
 
   startEdit(entry: CriterionEntry): void {
+    if (entry.value && entry.value !== '') {
+      this.confirmEdit = entry.criterion_id;
+    } else {
+      this.openEdit(entry);
+    }
+  }
+
+  openEdit(entry: CriterionEntry): void {
+    this.confirmEdit = null;
     this.editingId = entry.criterion_id;
     this.editValue = entry.value || '';
+    this.editMeasuredAt = '';
+  }
+
+  cancelConfirm(): void {
+    this.confirmEdit = null;
   }
 
   cancelEdit(): void {
     this.editingId = null;
     this.editValue = '';
+    this.editMeasuredAt = '';
+    this.confirmEdit = null;
   }
 
   saveValue(entry: CriterionEntry): void {
     const value = this.editValue.trim();
+    if (!value) return;
     this.savingCriterionId = entry.criterion_id;
-    this.api.setUserCriterion(entry.criterion_id, value).subscribe({
+    this.api.setUserCriterion(entry.criterion_id, value, this.editMeasuredAt || undefined).subscribe({
       next: () => {
         this.savingCriterionId = null;
         entry.value = value;
@@ -244,6 +264,21 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     });
   }
 
+  goToAndEdit(criterionId: string): void {
+    this.activeTab = 'criteria';
+    this.cancelEdit();
+    setTimeout(() => {
+      const el = document.getElementById(`crit-${criterionId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('row-highlight');
+        setTimeout(() => el.classList.remove('row-highlight'), 2500);
+      }
+      const entry = this.criteriaEntries.find(e => e.criterion_id === criterionId);
+      if (entry) this.startEdit(entry);
+    }, 150);
+  }
+
   filledCount(gw: GroupWithEntries): number {
     return gw.entries.filter(e => e.value && e.value !== '').length;
   }
@@ -255,23 +290,48 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   formatValue(entry: CriterionEntry): string {
     if (!entry.value) return '';
     if (entry.input_type === 'check' || entry.input_type === 'boolean') {
-      return entry.value === '1' ? '✅' : '❌';
+      return entry.value === '1' ? 'Да' : 'Нет';
     }
     return entry.value;
   }
 
-  statusEmoji(status: string): string {
-    const map: Record<string, string> = { ok: '✅', warning: '⚠️', critical: '🔴', empty: '⚪' };
-    return map[status] || '⚪';
-  }
-
   statusLabel(status: string): string {
-    const map: Record<string, string> = { ok: 'Норма', warning: 'Внимание', critical: 'Критично', empty: 'Нет данных' };
+    const map: Record<string, string> = {
+      ok: 'Норма',
+      warning: 'Внимание',
+      critical: 'Критично',
+      empty: 'Нет данных',
+    };
     return map[status] || status;
   }
 
-  recTypeEmoji(type: string): string {
-    const map: Record<string, string> = { reminder: '🔔', recommendation: '💡', alarm: '🚨', expiration_reminder: '⏰' };
-    return map[type] || '💡';
+  statusIcon(status: string): string {
+    const map: Record<string, string> = {
+      ok: '@tui.check-circle',
+      warning: '@tui.alert-circle',
+      critical: '@tui.alert-triangle',
+      empty: '@tui.circle',
+    };
+    return map[status] || '@tui.circle';
+  }
+
+  recTypeLabel(type: string): string {
+    const map: Record<string, string> = {
+      reminder: 'Нет данных',
+      recommendation: 'Совет',
+      alarm: 'Тревога',
+      expiration_reminder: 'Срок истекает',
+    };
+    return map[type] || type;
+  }
+
+  recTypeIcon(type: string): string {
+    const map: Record<string, string> = {
+      reminder: '@tui.bell',
+      recommendation: '@tui.info',
+      alarm: '@tui.alert-triangle',
+      expiration_reminder: '@tui.clock',
+    };
+    return map[type] || '@tui.info';
   }
 }

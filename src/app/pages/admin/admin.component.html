@@ -1,14 +1,19 @@
 <app-nav />
     <div class="page">
-      <h1 class="page-title">⚙️ Панель администратора</h1>
+      <h1 class="page-title">
+        <tui-icon icon="@tui.settings" class="title-icon" />
+        Панель администратора
+      </h1>
 
       <!-- Tabs -->
       <div class="tabs">
         <button class="tab" [class.active]="tab === 'recommendations'" (click)="switchTab('recommendations')">
-          💡 Рекомендации
+          <tui-icon icon="@tui.info" class="tab-icon" />
+          Рекомендации
         </button>
         <button class="tab" [class.active]="tab === 'criteria'" (click)="switchTab('criteria')">
-          🔬 Критерии
+          <tui-icon icon="@tui.activity" class="tab-icon" />
+          Критерии
         </button>
       </div>
 
@@ -17,7 +22,10 @@
 
         <!-- Form card -->
         <section class="card form-card">
-          <h2 class="section-title">{{ editingRec ? '✏️ Редактировать рекомендацию' : '➕ Новая рекомендация' }}</h2>
+          <h2 class="section-title">
+            <tui-icon [icon]="editingRec ? '@tui.pencil' : '@tui.plus'" class="section-icon" />
+            {{ editingRec ? 'Редактировать рекомендацию' : 'Новая рекомендация' }}
+          </h2>
           <div class="form-grid">
 
             <div class="form-group">
@@ -36,10 +44,10 @@
             <div class="form-group">
               <label>Тип</label>
               <select [(ngModel)]="recForm.type" class="input">
-                <option value="reminder">🔔 reminder — нет данных</option>
-                <option value="recommendation">💡 recommendation — образ жизни</option>
-                <option value="alarm">🚨 alarm — тревога (критично)</option>
-                <option value="expiration_reminder">⏰ expiration_reminder — срок истекает</option>
+                <option value="reminder">reminder — нет данных</option>
+                <option value="recommendation">recommendation — образ жизни</option>
+                <option value="alarm">alarm — тревога (критично)</option>
+                <option value="expiration_reminder">expiration_reminder — срок истекает</option>
               </select>
             </div>
 
@@ -74,14 +82,20 @@
         <section class="card">
           <div class="card-header">
             <h2 class="section-title">Список рекомендаций</h2>
-            <button tuiButton appearance="ghost" size="s" (click)="loadRecs()">🔄 Обновить</button>
+            <button tuiButton appearance="ghost" size="s" (click)="loadRecs()">
+              <tui-icon icon="@tui.refresh-cw" />
+              Обновить
+            </button>
           </div>
           <div *ngIf="loadingRecs" class="center"><tui-loader /></div>
           <div *ngIf="!loadingRecs && recommendations.length === 0" class="empty">Нет рекомендаций.</div>
           <div class="rec-list" *ngIf="!loadingRecs && recommendations.length > 0">
             <div class="rec-item" *ngFor="let r of recommendations">
               <div class="rec-header">
-                <span class="type-badge type-{{ r.type }}">{{ typeLabel(r.type) }}</span>
+                <span class="type-badge type-{{ r.type }}">
+                  <tui-icon [icon]="typeIcon(r.type)" class="type-icon" />
+                  {{ typeLabel(r.type) }}
+                </span>
                 <strong>{{ r.title }}</strong>
                 <span class="crit-name">{{ criterionName(r.criterion_id) }}</span>
               </div>
@@ -90,9 +104,11 @@
                 <span class="text-more" *ngIf="r.texts.length > 2">+{{ r.texts.length - 2 }} ещё</span>
               </div>
               <div class="rec-actions">
-                <button tuiButton size="xs" appearance="ghost" (click)="editRec(r)">✏️ Изменить</button>
+                <button tuiButton size="xs" appearance="ghost" (click)="editRec(r)">
+                  <tui-icon icon="@tui.pencil" /> Изменить
+                </button>
                 <button tuiButton size="xs" appearance="destructive" [disabled]="deletingRecId === r.id" (click)="deleteRec(r.id)">
-                  @if (deletingRecId === r.id) { <tui-loader size="xs" /> } @else { 🗑️ Удалить }
+                  @if (deletingRecId === r.id) { <tui-loader size="xs" /> } @else { <tui-icon icon="@tui.trash-2" /> Удалить }
                 </button>
               </div>
             </div>
@@ -105,7 +121,10 @@
 
         <!-- Form card -->
         <section class="card form-card">
-          <h2 class="section-title">{{ editingCrit ? '✏️ Редактировать критерий' : '➕ Новый критерий' }}</h2>
+          <h2 class="section-title">
+            <tui-icon [icon]="editingCrit ? '@tui.pencil' : '@tui.plus'" class="section-icon" />
+            {{ editingCrit ? 'Редактировать критерий' : 'Новый критерий' }}
+          </h2>
           <div class="form-grid">
 
             <div class="form-group full">
@@ -163,14 +182,14 @@
             <div class="form-group full input-type-desc" *ngIf="critForm.input_type">
               <div class="type-info" [ngClass]="'info-' + critForm.input_type">
                 <ng-container *ngIf="critForm.input_type === 'numeric'">
-                  📊 <strong>numeric</strong> — пользователь вводит число. Укажите ниже диапазон нормы.
+                  <strong>numeric</strong> — пользователь вводит число. Укажите ниже диапазон нормы.
                 </ng-container>
                 <ng-container *ngIf="critForm.input_type === 'check'">
-                  ✅ <strong>check</strong> — пользователь отмечает, сделал ли он это (например, посетил врача).
+                  <strong>check</strong> — пользователь отмечает, сделал ли он это (например, посетил врача).
                   «+» сохраняется, «−» игнорируется. Дополнительных полей не требуется.
                 </ng-container>
                 <ng-container *ngIf="critForm.input_type === 'boolean'">
-                  🔵 <strong>boolean</strong> — бинарный результат: «+» положительный (норма), «−» отрицательный
+                  <strong>boolean</strong> — бинарный результат: «+» положительный (норма), «−» отрицательный
                   (автоматически запускает рекомендацию-тревогу). Дополнительных полей не требуется.
                 </ng-container>
               </div>
@@ -221,7 +240,10 @@
         <section class="card">
           <div class="card-header">
             <h2 class="section-title">Список критериев</h2>
-            <button tuiButton appearance="ghost" size="s" (click)="loadCriteria()">🔄 Обновить</button>
+            <button tuiButton appearance="ghost" size="s" (click)="loadCriteria()">
+              <tui-icon icon="@tui.refresh-cw" />
+              Обновить
+            </button>
           </div>
           <div *ngIf="loadingCriteria" class="center"><tui-loader /></div>
           <div *ngIf="!loadingCriteria && criteria.length === 0" class="empty">Нет критериев.</div>
@@ -239,7 +261,9 @@
                 <span *ngIf="c.delta != null"> ± {{ c.delta }}</span>
               </div>
               <div class="rec-actions">
-                <button tuiButton size="xs" appearance="ghost" (click)="editCrit(c)">✏️ Изменить</button>
+                <button tuiButton size="xs" appearance="ghost" (click)="editCrit(c)">
+                  <tui-icon icon="@tui.pencil" /> Изменить
+                </button>
               </div>
             </div>
           </div>

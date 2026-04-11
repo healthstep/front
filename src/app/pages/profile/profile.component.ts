@@ -1,14 +1,14 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TuiButton, TuiLoader, TuiTextfield } from '@taiga-ui/core';
+import { TuiButton, TuiLoader, TuiTextfield, TuiIcon } from '@taiga-ui/core';
 import { NavComponent } from '../../shared/nav/nav.component';
 import { ApiService } from '../../core/services/api.service';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, TuiButton, TuiLoader, NavComponent, FormsModule, TuiTextfield],
+  imports: [CommonModule, TuiButton, TuiLoader, TuiIcon, NavComponent, FormsModule, TuiTextfield],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
 })

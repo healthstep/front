@@ -42,11 +42,10 @@ export class ApiService {
     return this.http.get(`${this.base}/health/user-criteria`);
   }
 
-  setUserCriterion(criterionId: string, value: string): Observable<any> {
-    return this.http.post(`${this.base}/health/user-criteria`, {
-      criterion_id: criterionId,
-      value,
-    });
+  setUserCriterion(criterionId: string, value: string, measuredAt?: string): Observable<any> {
+    const body: any = { criterion_id: criterionId, value };
+    if (measuredAt) body['measured_at'] = measuredAt;
+    return this.http.post(`${this.base}/health/user-criteria`, body);
   }
 
   resetCriteria(): Observable<any> {

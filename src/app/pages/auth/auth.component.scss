@@ -1,9 +1,9 @@
 :host {
-  --brand: #2563eb;
-  --brand-dark: #1d4ed8;
-  --text: #0f172a;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
+  --brand: #38B6FF;
+  --brand-dark: #0E9FE5;
+  --text: #111827;
+  --text-muted: #6b7280;
+  --border: #e5e7eb;
 }
 
 .auth-page {
@@ -12,7 +12,7 @@
   align-items: center;
   min-height: 100vh;
   padding: 2rem 1rem;
-  background: linear-gradient(150deg, #eff6ff 0%, #e0f2fe 60%, #f0fdf4 100%);
+  background: #f8fafc;
 }
 
 .auth-card {
@@ -20,33 +20,30 @@
   width: 100%;
   background: white;
   border-radius: 1.25rem;
-  box-shadow: 0 12px 48px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   overflow: hidden;
 }
 
 .auth-header {
   text-align: center;
   padding: 2.5rem 2rem 1.75rem;
-  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
-  color: white;
+  background: var(--brand);
 }
 
-.logo-mark {
-  font-size: 2.5rem;
+.auth-logo {
+  height: 52px;
+  width: auto;
   display: block;
-  margin-bottom: 0.5rem;
-}
-
-.auth-header h1 {
-  margin: 0 0 0.25rem;
-  font-size: 1.75rem;
-  font-weight: 700;
+  margin: 0 auto 0.625rem;
 }
 
 .tagline {
   margin: 0;
-  opacity: 0.8;
-  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .auth-section {
@@ -115,12 +112,19 @@
   margin-bottom: 0.5rem;
 }
 
+.bot-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
 .divider {
   display: flex;
   align-items: center;
   padding: 0 2rem;
   gap: 1rem;
-  color: #94a3b8;
+  color: #9ca3af;
   font-size: 0.8rem;
 
   &::before,
@@ -162,7 +166,7 @@
   align-items: center;
 
   .tui-input {
-    padding-right: 2.5rem;
+    padding-right: 2.75rem;
   }
 }
 
@@ -172,10 +176,17 @@
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1rem;
-  line-height: 1;
-  padding: 0;
+  padding: 0.25rem;
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+
+  tui-icon {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  &:hover { color: var(--text); }
 }
 
 .field-error {
@@ -205,11 +216,12 @@
   color: #15803d;
   font-weight: 500;
 
-  span {
-    font-size: 1.25rem;
-  }
+  p { margin: 0; }
+}
 
-  p {
-    margin: 0;
-  }
+.success-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #22c55e;
+  flex-shrink: 0;
 }

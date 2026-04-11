@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TuiButton, TuiLoader } from '@taiga-ui/core';
+import { TuiButton, TuiLoader, TuiIcon } from '@taiga-ui/core';
 import { NavComponent } from '../../shared/nav/nav.component';
 import { ApiService } from '../../core/services/api.service';
 
@@ -37,7 +37,7 @@ interface Group {
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, TuiButton, TuiLoader, NavComponent],
+  imports: [CommonModule, FormsModule, TuiButton, TuiLoader, TuiIcon, NavComponent],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss',
 })
@@ -105,12 +105,22 @@ export class AdminComponent implements OnInit {
 
   typeLabel(type: string): string {
     const map: Record<string, string> = {
-      reminder: '🔔 reminder',
-      recommendation: '💡 recommend.',
-      alarm: '🚨 alarm',
-      expiration_reminder: '⏰ expiry',
+      reminder: 'Нет данных',
+      recommendation: 'Совет',
+      alarm: 'Тревога',
+      expiration_reminder: 'Срок',
     };
     return map[type] ?? type;
+  }
+
+  typeIcon(type: string): string {
+    const map: Record<string, string> = {
+      reminder: '@tui.bell',
+      recommendation: '@tui.info',
+      alarm: '@tui.alert-triangle',
+      expiration_reminder: '@tui.clock',
+    };
+    return map[type] ?? '@tui.info';
   }
 
   // ---- Loaders ----

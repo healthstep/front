@@ -1,7 +1,10 @@
 <app-nav />
 <div class="page">
   <div class="card">
-    <h2 class="page-title">👤 Профиль</h2>
+    <h2 class="page-title">
+      <tui-icon icon="@tui.user" class="title-icon" />
+      Профиль
+    </h2>
 
     @if (loading) {
       <tui-loader />
@@ -26,7 +29,9 @@
           } @else {
             <div class="field-value">
               <span>{{ user.display_name || 'Не указано' }}</span>
-              <button tuiButton size="xs" appearance="ghost" (click)="editingName = true">✏️</button>
+              <button tuiButton size="xs" appearance="ghost" (click)="editingName = true">
+                <tui-icon icon="@tui.pencil" />
+              </button>
             </div>
           }
         </div>
@@ -51,7 +56,9 @@
           } @else {
             <div class="field-value">
               <span>{{ user.birth_date || 'Не указана' }}</span>
-              <button tuiButton size="xs" appearance="ghost" (click)="startBirthEdit()">✏️</button>
+              <button tuiButton size="xs" appearance="ghost" (click)="startBirthEdit()">
+                <tui-icon icon="@tui.pencil" />
+              </button>
             </div>
           }
         </div>
@@ -73,7 +80,9 @@
           } @else {
             <div class="field-value">
               <span>{{ sexLabel(user.sex) }}</span>
-              <button tuiButton size="xs" appearance="ghost" (click)="editingSex = true">✏️</button>
+              <button tuiButton size="xs" appearance="ghost" (click)="editingSex = true">
+                <tui-icon icon="@tui.pencil" />
+              </button>
             </div>
           }
         </div>
@@ -84,7 +93,10 @@
       }
 
       @if (saveSuccess) {
-        <p class="success">✅ Профиль обновлён!</p>
+        <p class="success">
+          <tui-icon icon="@tui.check-circle" class="success-icon" />
+          Профиль обновлён
+        </p>
       }
     }
   </div>

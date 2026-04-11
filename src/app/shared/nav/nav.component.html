@@ -1,21 +1,26 @@
 <nav class="navbar">
-  <div class="nav-brand">
-    <span class="nav-logo">🏥</span>
-    <span class="nav-title">ЗдравоШаг</span>
-  </div>
+  <a routerLink="/" class="nav-brand">
+    <img src="logo.png" alt="ЗОШ" class="nav-logo-img" />
+  </a>
   <div class="nav-links">
     <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
-      📊 Прогресс
+      <tui-icon icon="@tui.bar-chart-2" class="nav-icon" />
+      Прогресс
     </a>
     <a routerLink="/profile" routerLinkActive="active" class="nav-link">
-      👤 Профиль
+      <tui-icon icon="@tui.user" class="nav-icon" />
+      Профиль
     </a>
     <a *ngIf="isAdmin" routerLink="/admin" routerLinkActive="active" class="nav-link admin-link">
-      ⚙️ Админ
+      <tui-icon icon="@tui.settings" class="nav-icon" />
+      Админ
     </a>
     @if (navLoading) {
       <span class="nav-loader"><tui-loader size="xs" /></span>
     }
   </div>
-  <button tuiButton appearance="ghost" size="s" (click)="logout()">Выйти</button>
+  <button tuiButton appearance="outline" size="s" (click)="logout()" class="logout-btn">
+    <tui-icon icon="@tui.log-out" />
+    Выйти
+  </button>
 </nav>

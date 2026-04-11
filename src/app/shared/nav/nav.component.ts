@@ -1,14 +1,14 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { TuiButton, TuiLoader } from '@taiga-ui/core';
+import { TuiButton, TuiLoader, TuiIcon } from '@taiga-ui/core';
 import { AuthService } from '../../core/services/auth.service';
 import { ApiService } from '../../core/services/api.service';
 
 @Component({
   selector: 'app-nav',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, TuiButton, TuiLoader, CommonModule],
+  imports: [RouterLink, RouterLinkActive, TuiButton, TuiLoader, TuiIcon, CommonModule],
   templateUrl: './nav.component.html',
   styleUrl: './nav.component.scss',
 })

@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TuiButton } from '@taiga-ui/core';
+import { TuiButton, TuiIcon } from '@taiga-ui/core';
 
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [RouterLink, TuiButton],
+  imports: [RouterLink, TuiButton, TuiIcon],
   templateUrl: './landing.component.html',
   styleUrl: './landing.component.scss',
 })

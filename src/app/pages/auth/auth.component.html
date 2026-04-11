@@ -1,10 +1,9 @@
 <div class="auth-page">
   <div class="auth-card">
-    <!-- Logo -->
+    <!-- Logo / Header -->
     <div class="auth-header">
-      <span class="logo-mark">❤️</span>
-      <h1>ЗдравоШаг</h1>
-      <p class="tagline">Следите за здоровьем — просто и бесплатно</p>
+      <img src="logo.png" alt="ЗОШ" class="auth-logo" />
+      <p class="tagline">ШАГ ЗА ШАГОМ К ЗДОРОВЬЮ</p>
     </div>
 
     <!-- Token processing -->
@@ -43,12 +42,14 @@
 
         @if (tgUrl && !authenticated) {
           <div class="bot-links">
-            <a [href]="tgUrl" target="_blank" tuiButton appearance="primary" size="l">
-              ✈️ &nbsp;Telegram
+            <a [href]="tgUrl" target="_blank" tuiButton appearance="primary" size="l" class="bot-btn">
+              <tui-icon icon="@tui.send" />
+              Telegram
             </a>
             @if (maxUrl) {
-              <a [href]="maxUrl" target="_blank" tuiButton appearance="secondary" size="l">
-                💬 &nbsp;MAX
+              <a [href]="maxUrl" target="_blank" tuiButton appearance="outline" size="l" class="bot-btn">
+                <tui-icon icon="@tui.message-circle" />
+                MAX
               </a>
             }
           </div>
@@ -102,7 +103,9 @@
                 class="pwd-toggle"
                 (click)="showPassword = !showPassword"
                 tabindex="-1"
-              >{{ showPassword ? '🙈' : '👁️' }}</button>
+              >
+                <tui-icon [icon]="showPassword ? '@tui.eye-off' : '@tui.eye'" />
+              </button>
             </div>
             @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
               <span class="field-error">Минимум 4 символа</span>
@@ -132,7 +135,7 @@
 
       @if (authenticated) {
         <div class="success-block">
-          <span>✅</span>
+          <tui-icon icon="@tui.check-circle" class="success-icon" />
           <p>Авторизация прошла успешно! Перенаправление...</p>
         </div>
       }

@@ -56,21 +56,23 @@
 }
 
 .hero-logo-circle {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 96px;
-  height: 96px;
+  width: 108px;
+  height: 108px;
   border-radius: 50%;
   background: var(--brand);
+  padding: 14px;
   overflow: hidden;
-  margin-bottom: 1.25rem;
+  margin: 0 auto 1.25rem;
+  box-shadow: 0 4px 20px rgba(56, 182, 255, 0.3);
 }
 
 .hero-logo {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 
   @media (max-width: 720px) {
@@ -535,4 +537,63 @@
   text-align: center;
   color: #9ca3af;
   font-size: 0.8rem;
+}
+
+/* ---- Metrics explainer ---- */
+.metrics-explainer {
+  .section-sub {
+    max-width: 640px;
+    margin-bottom: 1.75rem;
+  }
+}
+
+.metrics-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mc {
+  display: flex;
+  gap: 0.875rem;
+  align-items: flex-start;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.875rem;
+  padding: 1rem 1.25rem;
+
+  .mc-icon {
+    font-size: 1.75rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  strong {
+    display: block;
+    font-size: 0.9rem;
+    color: #111827;
+    margin-bottom: 0.25rem;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #6b7280;
+    line-height: 1.5;
+  }
+}
+
+.metrics-note {
+  font-size: 0.85rem;
+  color: #6b7280;
+  background: var(--brand-light);
+  border-left: 3px solid var(--brand);
+  padding: 0.75rem 1rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+  margin: 0;
 }

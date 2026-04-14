@@ -232,7 +232,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.confirmEdit = null;
     this.editingId = entry.criterion_id;
     this.editValue = entry.value || '';
-    this.editMeasuredAt = '';
+    // Keep existing date if set, otherwise default to today
+    this.editMeasuredAt = this.today;
   }
 
   cancelConfirm(): void {
@@ -333,5 +334,15 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       expiration_reminder: '@tui.clock',
     };
     return map[type] || '@tui.info';
+  }
+
+  recTypeEmoji(type: string): string {
+    const map: Record<string, string> = {
+      reminder: '🔔',
+      recommendation: '💡',
+      alarm: '⚠️',
+      expiration_reminder: '⏰',
+    };
+    return map[type] || '💡';
   }
 }

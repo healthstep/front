@@ -7,6 +7,7 @@ import { provideTaiga } from '@taiga-ui/core';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { TUI_ICONS_PROVIDER } from './core/tui-icons';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -16,5 +17,6 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     ...provideTaiga(),
+    TUI_ICONS_PROVIDER,
   ],
 };

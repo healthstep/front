@@ -3,14 +3,16 @@
 
   <!-- Progress Summary -->
   <section class="card progress-card" *ngIf="loadingProgress && !progress">
-    <tui-loader />
+    <div class="skeleton-loader">
+      <div class="skeleton-line wide"></div>
+      <div class="skeleton-bar"></div>
+    </div>
   </section>
   <section class="card progress-card" *ngIf="progress">
     <div class="progress-header">
       <div>
         <h2 class="section-title">
-          <tui-icon icon="@tui.bar-chart-2" class="title-icon" />
-          Мой прогресс
+          📊 Мой прогресс
         </h2>
         <p class="level-label">{{ progress.level_label }}</p>
       </div>
@@ -35,26 +37,26 @@
   <!-- Tabs -->
   <div class="tabs">
     <button type="button" class="tab" [class.active]="activeTab === 'criteria'" (click)="onTabChange('criteria')">
-      <tui-icon icon="@tui.activity" class="tab-icon" />
-      Показатели
+      🔬 Показатели
     </button>
     <button type="button" class="tab" [class.active]="activeTab === 'weekly'" (click)="onTabChange('weekly')">
-      <tui-icon icon="@tui.calendar" class="tab-icon" />
-      Неделя
+      📅 Неделя
     </button>
     <button type="button" class="tab" [class.active]="activeTab === 'chart'" (click)="onTabChange('chart')">
-      <tui-icon icon="@tui.trending-up" class="tab-icon" />
-      График
+      📈 График
     </button>
   </div>
 
   <!-- Criteria Tab -->
   <section class="card criteria-card" *ngIf="activeTab === 'criteria'">
     @if (loading) {
-      <tui-loader />
+      <div class="loading-state">
+        <tui-loader />
+        <span>Загрузка показателей...</span>
+      </div>
     }
 
-    @if (!loading && criteriaGroups.length === 0) {
+    @if (!loading && criteriaGroups.length === 0 && ungroupedEntries.length === 0) {
       <p class="empty">Нет данных. Добавьте первые показатели через бота.</p>
     }
 
@@ -64,23 +66,15 @@
           {{ gw.group.name }}
           <span class="group-count">({{ filledCount(gw) }}/{{ gw.entries.length }})</span>
         </h3>
-        <table class="criteria-table">
-          <thead>
-            <tr>
-              <th>Показатель</th>
-              <th>Значение</th>
-              <th>Статус</th>
-              <th>Рекомендация</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (entry of gw.entries; track entry.criterion_id) {
-              <tr [id]="'crit-' + entry.criterion_id" class="criterion-row" [class]="'row-' + entry.status">
-                <td class="criterion-name-cell">
+        <div class="criteria-list">
+          @for (entry of gw.entries; track entry.criterion_id) {
+            <div [id]="'crit-' + entry.criterion_id" class="criterion-item" [class]="'row-' + entry.status">
+              <div class="criterion-main">
+                <div class="criterion-name-cell">
                   <span class="level-dot" [class]="'lvl-' + entry.level"></span>
-                  {{ entry.criterion_name }}
-                </td>
-                <td class="value-cell">
+                  <span class="criterion-name">{{ entry.criterion_name }}</span>
+                </div>
+                <div class="criterion-value-area">
                   @if (confirmEdit === entry.criterion_id) {
                     <div class="confirm-box">
                       <p class="confirm-text">
@@ -96,101 +90,78 @@
                       <span class="value-text" *ngIf="entry.value">{{ formatValue(entry) }}</span>
                       <span class="no-value" *ngIf="!entry.value">—</span>
                       <button tuiButton size="xs" appearance="ghost" (click)="startEdit(entry)" class="edit-btn">
-                        <tui-icon icon="@tui.pencil" />
+                        ✏️
                       </button>
                     </div>
                   }
-                </td>
-                <td class="status-cell">
-                  <span class="status-badge" [class]="'status-' + entry.status">
-                    <tui-icon [icon]="statusIcon(entry.status)" class="status-icon-sm" />
-                    {{ statusLabel(entry.status) }}
-                  </span>
-                </td>
-                <td class="rec-cell">
-                  <span class="rec-tip" *ngIf="entry.recommendation && entry.status !== 'ok'">{{ entry.recommendation }}</span>
-                </td>
-              </tr>
+                </div>
+              </div>
+
               @if (editingId === entry.criterion_id) {
-                <tr class="edit-row">
-                  <td colspan="4">
-                    <div class="edit-form">
-                      <div class="edit-form-label">
-                        <strong>{{ entry.criterion_name }}</strong>
-                      </div>
+                <div class="edit-form">
+                  <div class="edit-form-label">
+                    <strong>{{ entry.criterion_name }}</strong>
+                  </div>
 
-                      @if (entry.input_type === 'boolean' || entry.input_type === 'check') {
-                        <div class="bool-choice">
-                          <button
-                            type="button"
-                            class="bool-opt bool-yes"
-                            [class.active]="editValue === '1'"
-                            (click)="editValue = '1'"
-                          >
-                            <tui-icon icon="@tui.check" />
-                            Да
-                          </button>
-                          <button
-                            type="button"
-                            class="bool-opt bool-no"
-                            [class.active]="editValue === '0'"
-                            (click)="editValue = '0'"
-                          >
-                            <tui-icon icon="@tui.x" />
-                            Нет
-                          </button>
-                        </div>
-                      } @else {
-                        <input
-                          [(ngModel)]="editValue"
-                          type="number"
-                          class="edit-input"
-                          (keyup.enter)="saveValue(entry)"
-                          placeholder="Введите значение"
-                          autofocus
-                        />
-                      }
-
-                      <div class="date-row">
-                        <label class="date-label">
-                          <tui-icon icon="@tui.calendar" class="date-icon" />
-                          Дата анализа
-                        </label>
-                        <input
-                          type="date"
-                          [(ngModel)]="editMeasuredAt"
-                          [max]="today"
-                          class="date-input"
-                        />
-                      </div>
-
-                      <div class="edit-actions">
-                        <button
-                          tuiButton
-                          size="s"
-                          appearance="primary"
-                          [disabled]="savingCriterionId === entry.criterion_id || !editValue"
-                          (click)="saveValue(entry)"
-                        >
-                          @if (savingCriterionId === entry.criterion_id) {
-                            <tui-loader size="xs" />
-                          } @else {
-                            <tui-icon icon="@tui.check" />
-                            Сохранить
-                          }
-                        </button>
-                        <button tuiButton size="s" appearance="ghost" (click)="cancelEdit()">
-                          <tui-icon icon="@tui.x" />
-                          Отмена
-                        </button>
-                      </div>
+                  @if (entry.input_type === 'boolean' || entry.input_type === 'check') {
+                    <div class="bool-choice">
+                      <button
+                        type="button"
+                        class="bool-opt bool-yes"
+                        [class.active]="editValue === '1'"
+                        (click)="editValue = '1'"
+                      >✅ Да</button>
+                      <button
+                        type="button"
+                        class="bool-opt bool-no"
+                        [class.active]="editValue === '0'"
+                        (click)="editValue = '0'"
+                      >❌ Нет</button>
                     </div>
-                  </td>
-                </tr>
+                  } @else {
+                    <input
+                      [(ngModel)]="editValue"
+                      type="number"
+                      class="edit-input"
+                      (keyup.enter)="saveValue(entry)"
+                      placeholder="Введите значение"
+                      autofocus
+                    />
+                  }
+
+                  <div class="date-row">
+                    <label class="date-label">📅 Дата анализа</label>
+                    <input
+                      type="date"
+                      [(ngModel)]="editMeasuredAt"
+                      [max]="today"
+                      class="date-input"
+                    />
+                  </div>
+
+                  <div class="edit-actions">
+                    <button
+                      tuiButton
+                      size="s"
+                      appearance="primary"
+                      [disabled]="savingCriterionId === entry.criterion_id || !editValue"
+                      (click)="saveValue(entry)"
+                    >
+                      @if (savingCriterionId === entry.criterion_id) {
+                        <tui-loader size="xs" />
+                      } @else {
+                        ✅ Сохранить
+                      }
+                    </button>
+                    <button tuiButton size="s" appearance="ghost" (click)="cancelEdit()">
+                      Отмена
+                    </button>
+                  </div>
+                </div>
               }
-            }
-          </tbody>
-        </table>
+            </div>
+          }
+        </div>
       </div>
     }
 
@@ -201,15 +172,14 @@
           Прочее
           <span class="group-count">({{ filledCountRaw(ungroupedEntries) }}/{{ ungroupedEntries.length }})</span>
         </h3>
-        <table class="criteria-table">
-          <thead>
-            <tr><th>Показатель</th><th>Значение</th><th>Статус</th><th>Рекомендация</th></tr>
-          </thead>
-          <tbody>
-            @for (entry of ungroupedEntries; track entry.criterion_id) {
-              <tr [id]="'crit-' + entry.criterion_id" class="criterion-row" [class]="'row-' + entry.status">
-                <td class="criterion-name-cell">{{ entry.criterion_name }}</td>
-                <td class="value-cell">
+        <div class="criteria-list">
+          @for (entry of ungroupedEntries; track entry.criterion_id) {
+            <div [id]="'crit-' + entry.criterion_id" class="criterion-item" [class]="'row-' + entry.status">
+              <div class="criterion-main">
+                <div class="criterion-name-cell">
+                  <span class="criterion-name">{{ entry.criterion_name }}</span>
+                </div>
+                <div class="criterion-value-area">
                   @if (confirmEdit === entry.criterion_id) {
                     <div class="confirm-box">
                       <p class="confirm-text">Значение уже заполнено. Изменяйте только при наличии свежих данных.</p>
@@ -222,56 +192,38 @@
                     <div class="value-row">
                       <span class="value-text" *ngIf="entry.value">{{ formatValue(entry) }}</span>
                       <span class="no-value" *ngIf="!entry.value">—</span>
-                      <button tuiButton size="xs" appearance="ghost" (click)="startEdit(entry)" class="edit-btn">
-                        <tui-icon icon="@tui.pencil" />
-                      </button>
+                      <button tuiButton size="xs" appearance="ghost" (click)="startEdit(entry)" class="edit-btn">✏️</button>
                     </div>
                   }
-                </td>
-                <td>
-                  <span class="status-badge" [class]="'status-' + entry.status">
-                    <tui-icon [icon]="statusIcon(entry.status)" class="status-icon-sm" />
-                    {{ statusLabel(entry.status) }}
-                  </span>
-                </td>
-                <td><span class="rec-tip" *ngIf="entry.recommendation && entry.status !== 'ok'">{{ entry.recommendation }}</span></td>
-              </tr>
+                </div>
+              </div>
+
               @if (editingId === entry.criterion_id) {
-                <tr class="edit-row">
-                  <td colspan="4">
-                    <div class="edit-form">
-                      <div class="edit-form-label"><strong>{{ entry.criterion_name }}</strong></div>
-                      @if (entry.input_type === 'boolean' || entry.input_type === 'check') {
-                        <div class="bool-choice">
-                          <button type="button" class="bool-opt bool-yes" [class.active]="editValue === '1'" (click)="editValue = '1'">
-                            <tui-icon icon="@tui.check" /> Да
-                          </button>
-                          <button type="button" class="bool-opt bool-no" [class.active]="editValue === '0'" (click)="editValue = '0'">
-                            <tui-icon icon="@tui.x" /> Нет
-                          </button>
-                        </div>
-                      } @else {
-                        <input [(ngModel)]="editValue" type="number" class="edit-input" (keyup.enter)="saveValue(entry)" placeholder="Значение" autofocus />
-                      }
-                      <div class="date-row">
-                        <label class="date-label"><tui-icon icon="@tui.calendar" class="date-icon" /> Дата анализа</label>
-                        <input type="date" [(ngModel)]="editMeasuredAt" [max]="today" class="date-input" />
-                      </div>
-                      <div class="edit-actions">
-                        <button tuiButton size="s" appearance="primary" [disabled]="savingCriterionId === entry.criterion_id || !editValue" (click)="saveValue(entry)">
-                          @if (savingCriterionId === entry.criterion_id) { <tui-loader size="xs" /> } @else { <tui-icon icon="@tui.check" /> Сохранить }
-                        </button>
-                        <button tuiButton size="s" appearance="ghost" (click)="cancelEdit()">
-                          <tui-icon icon="@tui.x" /> Отмена
-                        </button>
-                      </div>
+                <div class="edit-form">
+                  <div class="edit-form-label"><strong>{{ entry.criterion_name }}</strong></div>
+                  @if (entry.input_type === 'boolean' || entry.input_type === 'check') {
+                    <div class="bool-choice">
+                      <button type="button" class="bool-opt bool-yes" [class.active]="editValue === '1'" (click)="editValue = '1'">✅ Да</button>
+                      <button type="button" class="bool-opt bool-no" [class.active]="editValue === '0'" (click)="editValue = '0'">❌ Нет</button>
                     </div>
-                  </td>
-                </tr>
+                  } @else {
+                    <input [(ngModel)]="editValue" type="number" class="edit-input" (keyup.enter)="saveValue(entry)" placeholder="Значение" autofocus />
+                  }
+                  <div class="date-row">
+                    <label class="date-label">📅 Дата анализа</label>
+                    <input type="date" [(ngModel)]="editMeasuredAt" [max]="today" class="date-input" />
+                  </div>
+                  <div class="edit-actions">
+                    <button tuiButton size="s" appearance="primary" [disabled]="savingCriterionId === entry.criterion_id || !editValue" (click)="saveValue(entry)">
+                      @if (savingCriterionId === entry.criterion_id) { <tui-loader size="xs" /> } @else { ✅ Сохранить }
+                    </button>
+                    <button tuiButton size="s" appearance="ghost" (click)="cancelEdit()">Отмена</button>
+                  </div>
+                </div>
               }
-            }
-          </tbody>
-        </table>
+            </div>
+          }
+        </div>
       </div>
     }
   </section>
@@ -280,8 +232,7 @@
   <section class="card" *ngIf="activeTab === 'weekly'">
     <div class="section-header">
       <h2 class="section-title">
-        <tui-icon icon="@tui.calendar" class="title-icon" />
-        Рекомендации на неделю
+        📅 Рекомендации на неделю
         <span class="week-label" *ngIf="weekStart"> — с {{ weekStart }}</span>
       </h2>
       <div *ngIf="loadingWeekly" class="inline-loader"><tui-loader size="xs" /></div>
@@ -294,21 +245,17 @@
     <div class="weekly-list">
       <div *ngFor="let item of weeklyItems" class="weekly-item" [class.spent]="item.weight === 0">
         <div class="weekly-type-icon" [class]="'type-' + item.type">
-          <tui-icon [icon]="recTypeIcon(item.type)" />
+          {{ recTypeEmoji(item.type) }}
         </div>
         <div class="weekly-body">
           <p class="weekly-title" [class.line-through]="item.weight === 0">{{ item.title }}</p>
           <p class="weekly-meta" *ngIf="item.criterion_name">
-            <tui-icon icon="@tui.activity" class="meta-icon" />
-            {{ item.criterion_name }}
+            🔬 {{ item.criterion_name }}
           </p>
         </div>
         <div class="weekly-right">
           @if (item.weight === 0) {
-            <span class="spent-badge">
-              <tui-icon icon="@tui.check" class="spent-icon" />
-              Отправлено
-            </span>
+            <span class="spent-badge">✅ Готово</span>
           }
           @if (item.criterion_id && item.weight > 0) {
             <button
@@ -317,10 +264,8 @@
               appearance="outline"
               (click)="goToAndEdit(item.criterion_id)"
               class="fill-btn"
-              title="Перейти к показателю и заполнить"
             >
-              <tui-icon icon="@tui.pencil" />
-              Заполнить
+              ✏️ Заполнить
             </button>
           }
         </div>
@@ -330,10 +275,7 @@
 
   <!-- Chart Tab -->
   <section class="card chart-card" *ngIf="activeTab === 'chart'">
-    <h2 class="section-title">
-      <tui-icon icon="@tui.trending-up" class="title-icon" />
-      Визуализация здоровья по группам
-    </h2>
+    <h2 class="section-title">📈 Визуализация здоровья по группам</h2>
     <div class="chart-wrap">
       @if (loadingChart) {
         <div class="chart-overlay"><tui-loader /></div>

@@ -248,7 +248,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   }
 
   saveValue(entry: CriterionEntry): void {
-    const value = this.editValue.trim();
+    const value = String(this.editValue ?? '').trim();
     if (!value) return;
     this.savingCriterionId = entry.criterion_id;
     this.api.setUserCriterion(entry.criterion_id, value, this.editMeasuredAt || undefined).subscribe({

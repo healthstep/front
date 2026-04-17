@@ -19,7 +19,7 @@
           <span class="section-num">1</span>
           Войти через мессенджер
         </div>
-
+        <br>
         @if (loadingChallenge) {
           <div class="status-row">
             <tui-loader size="s" />
@@ -81,7 +81,7 @@
           <span class="section-num">2</span>
           Войти по паролю
         </div>
-
+        <br>
         <form [formGroup]="loginForm" (ngSubmit)="loginWithPassword()" class="form">
           <div class="field">
             <tui-textfield>

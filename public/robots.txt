@@ -1,0 +1,11 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Закрытые разделы приложения (не для индексации)
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /admin
+
+Sitemap: https://healthstep.ru/sitemap.xml

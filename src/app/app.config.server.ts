@@ -33,6 +33,15 @@ const serverConfig: ApplicationConfig = {
             matchMedia: (query: string) => mockMediaQueryList(query),
           });
         }
+        if (typeof win.requestAnimationFrame !== 'function') {
+          Object.assign(win, {
+            requestAnimationFrame: (cb: FrameRequestCallback): number =>
+              setTimeout(() => cb(Date.now()), 16) as unknown as number,
+            cancelAnimationFrame: (id: number): void => {
+              clearTimeout(id as unknown as ReturnType<typeof setTimeout>);
+            },
+          });
+        }
         return win;
       },
       deps: [DOCUMENT],

@@ -1,21 +1,14 @@
+<app-nav />
 <div class="landing">
 
   <!-- Hero -->
   <header class="hero">
     <div class="hero-content">
-      <span class="hero-logo-circle">
-        <img src="logo.png?v=3" alt="ЗОШ" class="hero-logo" />
-      </span>
       <p class="hero-tagline">ШАГ ЗА ШАГОМ К ЗДОРОВЬЮ</p>
       <p class="hero-subtitle">
         Храните результаты анализов, отслеживайте нормы и получайте
         персональные рекомендации — без очередей и лишних трат.
       </p>
-      <div class="hero-actions">
-        <a tuiButton appearance="primary" size="l" routerLink="/auth" class="cta-btn">
-          Войти / Зарегистрироваться
-        </a>
-      </div>
     </div>
     <div class="hero-visual">
       <div class="health-card">
@@ -26,7 +19,7 @@
         <div class="hc-row"><span class="hc-dot ok"></span> Гемоглобин <span class="hc-val">142 г/л</span></div>
         <div class="hc-row"><span class="hc-dot warn"></span> Холестерин <span class="hc-val warn">5.8 ммоль/л</span></div>
         <div class="hc-row"><span class="hc-dot ok"></span> Глюкоза <span class="hc-val">4.5 ммоль/л</span></div>
-        <div class="hc-row"><span class="hc-dot empty"></span> Давление <span class="hc-val add">+ добавить</span></div>
+        <div class="hc-row"><span class="hc-dot empty"></span> СОЭ <span class="hc-val add">+ добавить</span></div>
         <div class="hc-row"><span class="hc-dot ok"></span> ИМТ <span class="hc-val">22.4</span></div>
         <div class="hc-progress">
           <div class="hc-bar" style="width: 70%"></div>
@@ -55,38 +48,54 @@
 
   <!-- What are metrics -->
   <section class="section metrics-explainer">
-    <h2 class="section-title">Что такое показатели?</h2>
-    <p class="section-sub">
-      Показатели — это конкретные числа из ваших анализов и обследований: гемоглобин, холестерин, давление, ИМТ, уровень глюкозы и десятки других.
-      На сайте собрано <strong>50+ показателей здоровья</strong> — каждый с нормальным диапазоном, пояснением и рекомендацией.
-    </p>
+    <div class="metrics-intro">
+      <h2 class="section-title">Что такое показатели?</h2>
+      <p class="section-sub">
+        Показатели — это конкретные числа из ваших анализов и обследований: гемоглобин, холестерин, ИМТ, уровень глюкозы и десятки других.
+        На сайте собрано <strong>50+ показателей здоровья</strong> — каждый с нормальным диапазоном, пояснением и рекомендацией.
+      </p>
+    </div>
     <div class="metrics-cards">
       <div class="mc">
         <span class="mc-icon">🩸</span>
         <div>
-          <strong>Анализы крови</strong>
-          <p>Гемоглобин, лейкоциты, тромбоциты, СОЭ, глюкоза, холестерин и другие</p>
+          <strong>Кровь</strong>
+          <p>Общий и биохимический анализ крови, липидный профиль, гормоны и другие лабораторные показатели.</p>
         </div>
       </div>
       <div class="mc">
-        <span class="mc-icon">💓</span>
+        <span class="mc-icon">💧</span>
         <div>
-          <strong>Сердечно-сосудистые</strong>
-          <p>Артериальное давление, пульс, ЭКГ-параметры</p>
+          <strong>Анализ мочи</strong>
+          <p>Общий анализ мочи и связанные показатели для оценки состояния мочевыделительной системы.</p>
         </div>
       </div>
       <div class="mc">
-        <span class="mc-icon">⚖️</span>
+        <span class="mc-icon">👟</span>
         <div>
-          <strong>Антропометрия</strong>
-          <p>Индекс массы тела, объём талии, процент жировой ткани</p>
+          <strong>Повседневность</strong>
+          <p>Шаги, тренировки, зарядка, менструальный цикл — всё, что помогает видеть динамику образа жизни.</p>
         </div>
       </div>
       <div class="mc">
-        <span class="mc-icon">🧬</span>
+        <span class="mc-icon">🩺</span>
         <div>
-          <strong>Образ жизни</strong>
-          <p>Физическая активность, сон, уровень стресса — в числовых показателях</p>
+          <strong>Визиты к врачу</strong>
+          <p>Стоматолог, гинеколог, проктолог и другие специалисты — фиксация приёмов и рекомендаций.</p>
+        </div>
+      </div>
+      <div class="mc">
+        <span class="mc-icon">📟</span>
+        <div>
+          <strong>Инструментальные</strong>
+          <p>ЭКГ, УЗИ, флюорография и другие обследования с понятным хранением результатов.</p>
+        </div>
+      </div>
+      <div class="mc">
+        <span class="mc-icon">💉</span>
+        <div>
+          <strong>Вакцинация</strong>
+          <p>Сроки прививок и напоминания, чтобы не пропустить важные этапы профилактики.</p>
         </div>
       </div>
     </div>
@@ -114,10 +123,6 @@
             <span class="rp-desc">хронических заболеваний можно было предупредить при раннем выявлении</span>
           </div>
         </div>
-        <p class="reality-call">
-          ЗОШ не заменяет врача — он помогает <strong>замечать отклонения до того, как они станут проблемой</strong>.
-          Просто вносите данные из анализов раз в несколько месяцев.
-        </p>
       </div>
     </div>
   </section>
@@ -140,17 +145,17 @@
           <h3>Внесите результаты анализов</h3>
           <p>
             В России большинство анализов крови, мочи и базовые обследования входят в полис ОМС.
-            Просто сфотографируйте бланк и перенесите значения.
+            Загрузите PDF с результатами для автоматического разбора либо введите показатели вручную в личном кабинете.
           </p>
         </div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
         <div class="step-body">
-          <h3>Получайте сигналы, пока не поздно</h3>
+          <h3>Рекомендации на каждую неделю</h3>
           <p>
-            Система автоматически сравнивает ваши показатели с нормой и подсвечивает отклонения.
-            Ежедневный совет в мессенджере — чтобы ничего не забыть.
+            В начале каждой недели формируется список рекомендаций: они помогают контролировать и улучшать здоровье
+            на основе ваших данных и целей.
           </p>
         </div>
       </div>
@@ -201,7 +206,7 @@
           <tui-icon icon="@tui.info" />
         </div>
         <h3>Персональные советы</h3>
-        <p>Рекомендация дня на основе ваших реальных данных — питание, активность, профилактика.</p>
+        <p>Рекомендации на неделю с учётом ваших данных — питание, активность, профилактика.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon-wrap">
@@ -222,7 +227,7 @@
           <tui-icon icon="@tui.list" />
         </div>
         <h3>Группы показателей</h3>
-        <p>Кровь, биохимия, давление, гормоны, визиты — всё структурировано по категориям.</p>
+        <p>Кровь, моча, повседневность, визиты, инструментальные исследования, вакцинация — структурировано по разделам.</p>
       </div>
     </div>
   </section>
@@ -231,43 +236,30 @@
   <section class="cta-section">
     <div class="cta-box">
       <h2>Начните следить за здоровьем сегодня</h2>
-      <p>Бесплатно. Занимает 2 минуты. Никаких лишних шагов.</p>
-      <a tuiButton appearance="primary" size="l" routerLink="/auth">
-        Войти / Зарегистрироваться
+      <a
+        tuiButton
+        appearance="primary"
+        size="l"
+        routerLink="/auth"
+        class="cta-auth-btn"
+        title="Войти или зарегистрироваться"
+        aria-label="Войти или зарегистрироваться"
+      >
+        <tui-icon icon="@tui.door-open" class="cta-door-icon" />
       </a>
     </div>
   </section>
 
   <!-- Footer -->
   <footer class="footer">
-    <div class="footer-grid">
-      <div class="footer-col">
-        <span class="footer-logo-circle">
-          <img src="logo.png?v=3" alt="ЗОШ" class="footer-logo-img" />
-        </span>
-        <p>Персональный трекер здоровья.</p>
-      </div>
-      <div class="footer-col">
-        <h4>Навигация</h4>
-        <ul>
-          <li><a routerLink="/auth">Войти</a></li>
-          <li><a routerLink="/dashboard">Дашборд</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Поддержка</h4>
-        <ul>
-          <li>
-            <a href="https://t.me/vladimirialymov" target="_blank">
-              <tui-icon icon="@tui.send" class="footer-link-icon" />
-              Написать
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>© {{ currentYear }} ЗОШ — Шаг за шагом к здоровью</span>
+    <div class="footer-inner">
+      <p class="footer-line">
+        © {{ currentYear }} ЗОШ — Шаг за шагом к здоровью
+      </p>
+      <p class="footer-support">
+        Поддержка:
+        <a href="https://max.ru/u/f9LHodD0cOLxkMmVG0wzPTBaZMvQnAzpf218aUirNk7E2Pm5fDkTHqQMOgQ" target="_blank" rel="noopener noreferrer">написать в MAX</a>
+      </p>
     </div>
   </footer>
 </div>

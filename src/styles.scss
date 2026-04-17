@@ -1,3 +1,9 @@
+/* Запасные токены, если глобальная тема Taiga подгрузится с задержкой */
+:root {
+  --tui-stroke-width: 0.125rem;
+  --tui-font-offset: 0rem;
+}
+
 *,
 *::before,
 *::after {

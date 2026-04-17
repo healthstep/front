@@ -4,25 +4,49 @@
       <img src="logo.png?v=3" alt="ЗОШ" class="nav-logo-img" />
     </span>
   </a>
-  <div class="nav-links">
-    <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
-      <tui-icon icon="@tui.bar-chart-2" class="nav-icon" />
-      Прогресс
-    </a>
-    <a routerLink="/profile" routerLinkActive="active" class="nav-link">
-      <tui-icon icon="@tui.user" class="nav-icon" />
-      Профиль
-    </a>
-    <a *ngIf="isAdmin" routerLink="/admin" routerLinkActive="active" class="nav-link admin-link">
-      <tui-icon icon="@tui.settings" class="nav-icon" />
-      Админ
-    </a>
-    @if (navLoading) {
-      <span class="nav-loader"><tui-loader size="xs" /></span>
+
+  <div class="nav-center">
+    <div class="nav-links">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+        <tui-icon icon="@tui.bar-chart-2" class="nav-icon" />
+        Прогресс
+      </a>
+      <a *ngIf="isAdmin" routerLink="/admin" routerLinkActive="active" class="nav-link admin-link">
+        <tui-icon icon="@tui.settings" class="nav-icon" />
+        Админ
+      </a>
+      @if (navLoading) {
+        <span class="nav-loader"><tui-loader size="xs" /></span>
+      }
+    </div>
+  </div>
+
+  <div class="nav-right">
+    @if (loggedIn) {
+      <a
+        routerLink="/profile"
+        routerLinkActive="active"
+        tuiButton
+        appearance="flat"
+        size="s"
+        class="nav-round-btn"
+        title="Профиль"
+        aria-label="Профиль"
+      >
+        <tui-icon icon="@tui.circle-user" class="nav-round-icon" />
+      </a>
+    } @else {
+      <a
+        routerLink="/auth"
+        tuiButton
+        appearance="primary"
+        size="s"
+        class="nav-round-btn"
+        title="Войти или зарегистрироваться"
+        aria-label="Войти или зарегистрироваться"
+      >
+        <tui-icon icon="@tui.door-open" class="nav-round-icon" />
+      </a>
     }
   </div>
-  <button tuiButton appearance="outline" size="s" (click)="logout()" class="logout-btn">
-    <tui-icon icon="@tui.log-out" />
-    Выйти
-  </button>
 </nav>

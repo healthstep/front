@@ -30,10 +30,6 @@
   @media (max-width: 720px) {
     grid-template-columns: 1fr;
     text-align: center;
-
-    .hero-actions {
-      justify-content: center;
-    }
   }
 }
 
@@ -53,31 +49,6 @@
 .badge-icon {
   width: 0.875rem;
   height: 0.875rem;
-}
-
-.hero-logo-circle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 108px;
-  height: 108px;
-  border-radius: 50%;
-  background: var(--brand);
-  padding: 14px;
-  overflow: hidden;
-  margin: 0 auto 1.25rem;
-  box-shadow: 0 4px 20px rgba(56, 182, 255, 0.3);
-}
-
-.hero-logo {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-
-  @media (max-width: 720px) {
-    margin: 0 auto 0.5rem;
-  }
 }
 
 .hero-tagline {
@@ -299,17 +270,6 @@
   line-height: 1.5;
 }
 
-.reality-call {
-  font-size: 0.95rem;
-  color: var(--text);
-  line-height: 1.65;
-  margin: 0;
-  padding: 1.25rem;
-  background: white;
-  border-radius: 0.75rem;
-  border-left: 4px solid var(--brand);
-}
-
 /* Steps */
 .steps {
   display: flex;
@@ -395,12 +355,20 @@
   }
 }
 
-/* Feature grid */
+/* Feature grid — одинаковое число карточек в строке (2 или 3, без «4+2») */
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 1.25rem;
   margin-top: 2.5rem;
+
+  @media (min-width: 900px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .feature-card {
@@ -447,103 +415,70 @@
   color: white;
   box-shadow: 0 16px 48px rgba(56, 182, 255, 0.3);
 
-  h2 { margin: 0 0 0.5rem; font-size: 2rem; font-weight: 700; letter-spacing: -0.01em; }
-  p  { margin: 0 0 2rem; opacity: 0.85; font-size: 1rem; }
+  h2 { margin: 0 0 1.5rem; font-size: 2rem; font-weight: 700; letter-spacing: -0.01em; }
+}
+
+.cta-auth-btn {
+  min-width: 3.75rem;
+  min-height: 3.75rem;
+  padding: 0.75rem;
+  justify-content: center;
+}
+
+.cta-door-icon {
+  width: 1.85rem;
+  height: 1.85rem;
 }
 
 /* Footer */
 .footer {
   border-top: 1px solid var(--border);
-  padding: 2.5rem 0 1.5rem;
+  padding: 2rem 0 2rem;
   margin-top: 1rem;
 }
 
-.footer-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 2rem;
-  margin-bottom: 2rem;
-
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
+.footer-inner {
+  text-align: center;
+  max-width: 40rem;
+  margin: 0 auto;
 }
 
-.footer-logo-circle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--brand);
-  overflow: hidden;
-  margin-bottom: 0.75rem;
+.footer-line {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
 }
 
-.footer-logo-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.footer-col {
-  p {
-    color: var(--text-muted);
-    font-size: 0.875rem;
-    margin: 0;
-    line-height: 1.5;
-  }
-
-  h4 {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--text);
-    margin: 0 0 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
+.footer-support {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
 
   a {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
     color: var(--brand-dark);
     text-decoration: none;
-    font-size: 0.875rem;
+    margin-left: 0.25rem;
 
-    &:hover { text-decoration: underline; }
+    &:hover {
+      text-decoration: underline;
+    }
   }
-}
-
-.footer-link-icon {
-  width: 0.875rem;
-  height: 0.875rem;
-}
-
-.footer-bottom {
-  border-top: 1px solid #f3f4f6;
-  padding-top: 1.25rem;
-  text-align: center;
-  color: #9ca3af;
-  font-size: 0.8rem;
 }
 
 /* ---- Metrics explainer ---- */
-.metrics-explainer {
+.metrics-intro {
+  max-width: 42rem;
+  margin: 0 auto 1.75rem;
+  text-align: center;
+
+  .section-title {
+    text-align: center;
+  }
+
   .section-sub {
-    max-width: 640px;
-    margin-bottom: 1.75rem;
+    margin: 0.5rem 0 0;
+    text-align: center;
+    max-width: none;
   }
 }
 
@@ -553,7 +488,11 @@
   gap: 1rem;
   margin-bottom: 1.25rem;
 
-  @media (max-width: 560px) {
+  @media (min-width: 900px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 480px) {
     grid-template-columns: 1fr;
   }
 }

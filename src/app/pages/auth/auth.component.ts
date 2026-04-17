@@ -12,11 +12,12 @@ import {
   FormBuilder,
   Validators,
 } from '@angular/forms';
-import { TuiButton, TuiLoader, TuiTextfield, TuiIcon } from '@taiga-ui/core';
+import { TuiButton, TuiLoader, TuiIcon, TuiTextfield, TuiInput, TuiLabel } from '@taiga-ui/core';
 import { interval, Subscription } from 'rxjs';
 import { switchMap, takeWhile } from 'rxjs/operators';
 
 import { ApiService } from '../../core/services/api.service';
+import { NavComponent } from '../../shared/nav/nav.component';
 import { AuthService } from '../../core/services/auth.service';
 import { WebsocketService, WsMessage } from '../../core/services/websocket.service';
 
@@ -28,8 +29,11 @@ import { WebsocketService, WsMessage } from '../../core/services/websocket.servi
     ReactiveFormsModule,
     TuiButton,
     TuiLoader,
-    TuiTextfield,
     TuiIcon,
+    TuiTextfield,
+    TuiInput,
+    TuiLabel,
+    NavComponent,
   ],
   templateUrl: './auth.component.html',
   styleUrl: './auth.component.scss',
@@ -53,6 +57,8 @@ export class AuthComponent implements OnInit, OnDestroy {
 
   loginLoading = false;
   loginError: string | null = null;
+  /** Показываем «Ожидание подтверждения» только после перехода в мессенджер */
+  messengerOpened = false;
 
   loginForm = this.fb.group({
     phone: ['', [Validators.required, Validators.pattern(/^\+\d{10,15}$/)]],
@@ -111,6 +117,7 @@ export class AuthComponent implements OnInit, OnDestroy {
     this.challengeError = null;
     this.tgUrl = null;
     this.maxUrl = null;
+    this.messengerOpened = false;
     this.pollSub?.unsubscribe();
 
     this.api.browserChallenge().subscribe({
@@ -159,7 +166,12 @@ export class AuthComponent implements OnInit, OnDestroy {
     this.pollSub?.unsubscribe();
     this.tgUrl = null;
     this.maxUrl = null;
+    this.messengerOpened = false;
     this.startChallenge();
+  }
+
+  onMessengerOpened(): void {
+    this.messengerOpened = true;
   }
 
   loginWithPassword(): void {

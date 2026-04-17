@@ -1,19 +1,34 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TuiButton, TuiLoader, TuiTextfield, TuiIcon } from '@taiga-ui/core';
+import { TuiButton, TuiLoader, TuiIcon, TuiTextfield, TuiInput, TuiLabel } from '@taiga-ui/core';
+import { TuiDay } from '@taiga-ui/cdk/date-time';
+import { TuiInputDate } from '@taiga-ui/kit/components/input-date';
 import { NavComponent } from '../../shared/nav/nav.component';
 import { ApiService } from '../../core/services/api.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, TuiButton, TuiLoader, TuiIcon, NavComponent, FormsModule, TuiTextfield],
+  imports: [
+    CommonModule,
+    TuiButton,
+    TuiLoader,
+    TuiIcon,
+    TuiTextfield,
+    TuiInput,
+    TuiLabel,
+    ...TuiInputDate,
+    NavComponent,
+    FormsModule,
+  ],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
 })
 export class ProfileComponent implements OnInit {
   private api = inject(ApiService);
+  private auth = inject(AuthService);
 
   loading = true;
   saving = false;
@@ -25,6 +40,8 @@ export class ProfileComponent implements OnInit {
 
   displayName = '';
   birthDate = '';
+  /** Модель для `tuiInputDate` (дата рождения). */
+  birthDateDay: TuiDay | null = null;
   sex = '';
 
   saveError: string | null = null;
@@ -66,20 +83,33 @@ export class ProfileComponent implements OnInit {
   }
 
   startBirthEdit(): void {
-    this.birthDate = this.user.birth_date || '';
+    this.birthDateDay = this.parseYmdToDay(this.user.birth_date);
     this.editingBirth = true;
   }
 
   saveBirth(): void {
-    this.save({ birth_date: this.birthDate }).then(() => {
-      this.user.birth_date = this.birthDate;
+    const birth_date = this.birthDateDay?.toJSON() ?? '';
+    this.save({ birth_date }).then(() => {
+      this.user.birth_date = birth_date;
+      this.birthDate = birth_date;
       this.editingBirth = false;
     });
   }
 
   cancelBirthEdit(): void {
+    this.birthDateDay = this.parseYmdToDay(this.user.birth_date);
     this.birthDate = this.user.birth_date || '';
     this.editingBirth = false;
+  }
+
+  private parseYmdToDay(ymd: string | null | undefined): TuiDay | null {
+    const s = (ymd || '').trim();
+    if (!s) return null;
+    try {
+      return TuiDay.jsonParse(s);
+    } catch {
+      return null;
+    }
   }
 
   saveSex(): void {
@@ -115,5 +145,9 @@ export class ProfileComponent implements OnInit {
     if (sex === 'male') return 'Мужской';
     if (sex === 'female') return 'Женский';
     return 'Не указан';
+  }
+
+  logout(): void {
+    this.auth.logout();
   }
 }

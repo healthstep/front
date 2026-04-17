@@ -17,10 +17,13 @@
 
       <div class="profile-info">
         <div class="field-group">
-          <label class="field-label">Имя</label>
+          <span class="field-label">Имя</span>
           @if (editingName) {
             <div class="field-edit">
-              <input tuiTextfield [(ngModel)]="displayName" type="text" />
+              <tui-textfield class="field-textfield">
+                <label tuiLabel>Имя</label>
+                <input tuiInput [(ngModel)]="displayName" type="text" />
+              </tui-textfield>
               <button tuiButton size="s" appearance="primary" (click)="saveName()" [disabled]="saving">
                 @if (saving) { <tui-loader size="xs" /> } @else { Сохранить }
               </button>
@@ -37,21 +40,26 @@
         </div>
 
         <div class="field-group">
-          <label class="field-label">Телефон</label>
+          <span class="field-label">Телефон</span>
           <div class="field-value">
             <span>{{ user.phone_e164 || '—' }}</span>
           </div>
         </div>
 
         <div class="field-group">
-          <label class="field-label">Дата рождения</label>
+          <span class="field-label">Дата рождения</span>
           @if (editingBirth) {
-            <div class="field-edit">
-              <input tuiTextfield [(ngModel)]="birthDate" type="date" />
-              <button tuiButton size="s" appearance="primary" (click)="saveBirth()" [disabled]="saving">
-                @if (saving) { <tui-loader size="xs" /> } @else { Сохранить }
-              </button>
-              <button tuiButton size="s" appearance="ghost" (click)="cancelBirthEdit()">Отмена</button>
+            <div class="field-edit field-edit-stack">
+              <tui-textfield class="field-textfield">
+                <label tuiLabel>Дата рождения</label>
+                <input tuiInputDate [(ngModel)]="birthDateDay" />
+              </tui-textfield>
+              <div class="field-edit-actions">
+                <button tuiButton size="s" appearance="primary" (click)="saveBirth()" [disabled]="saving">
+                  @if (saving) { <tui-loader size="xs" /> } @else { Сохранить }
+                </button>
+                <button tuiButton size="s" appearance="ghost" (click)="cancelBirthEdit()">Отмена</button>
+              </div>
             </div>
           } @else {
             <div class="field-value">
@@ -64,18 +72,38 @@
         </div>
 
         <div class="field-group">
-          <label class="field-label">Пол</label>
+          <span class="field-label">Пол</span>
           @if (editingSex) {
-            <div class="field-edit">
-              <select [(ngModel)]="sex" class="sex-select">
-                <option value="">Не указан</option>
-                <option value="male">Мужской</option>
-                <option value="female">Женский</option>
-              </select>
-              <button tuiButton size="s" appearance="primary" (click)="saveSex()" [disabled]="saving">
-                @if (saving) { <tui-loader size="xs" /> } @else { Сохранить }
-              </button>
-              <button tuiButton size="s" appearance="ghost" (click)="editingSex = false">Отмена</button>
+            <div class="field-edit field-edit-stack">
+              <div class="sex-buttons">
+                <button
+                  type="button"
+                  tuiButton
+                  size="s"
+                  [appearance]="sex === '' ? 'primary' : 'outline'"
+                  (click)="sex = ''"
+                >Не указан</button>
+                <button
+                  type="button"
+                  tuiButton
+                  size="s"
+                  [appearance]="sex === 'male' ? 'primary' : 'outline'"
+                  (click)="sex = 'male'"
+                >Мужской</button>
+                <button
+                  type="button"
+                  tuiButton
+                  size="s"
+                  [appearance]="sex === 'female' ? 'primary' : 'outline'"
+                  (click)="sex = 'female'"
+                >Женский</button>
+              </div>
+              <div class="field-edit-actions">
+                <button tuiButton size="s" appearance="primary" (click)="saveSex()" [disabled]="saving">
+                  @if (saving) { <tui-loader size="xs" /> } @else { Сохранить }
+                </button>
+                <button tuiButton size="s" appearance="ghost" (click)="editingSex = false">Отмена</button>
+              </div>
             </div>
           } @else {
             <div class="field-value">
@@ -98,6 +126,13 @@
           Профиль обновлён
         </p>
       }
+
+      <div class="profile-actions">
+        <button tuiButton appearance="outline" size="m" (click)="logout()">
+          <tui-icon icon="@tui.log-out" />
+          Выйти
+        </button>
+      </div>
     }
   </div>
 </div>

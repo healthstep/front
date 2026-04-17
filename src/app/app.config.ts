@@ -3,11 +3,10 @@ import { provideRouter } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { provideTaiga } from '@taiga-ui/core';
+import { provideTaiga, tuiAssetsPathProvider } from '@taiga-ui/core';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
-import { TUI_ICONS_PROVIDER } from './core/tui-icons';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -17,6 +16,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     ...provideTaiga(),
-    TUI_ICONS_PROVIDER,
+    /** Абсолютный от корня сайта путь: иначе на /auth, /dashboard url() в маске даёт 404 и «квадраты». */
+    tuiAssetsPathProvider('/assets/taiga-ui/icons'),
   ],
 };

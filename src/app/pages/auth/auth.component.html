@@ -1,14 +1,10 @@
+<app-nav />
 <div class="auth-page">
   <div class="auth-card">
-    <!-- Logo / Header -->
     <div class="auth-header">
-      <span class="auth-logo-circle">
-        <img src="logo.png?v=3" alt="ЗОШ" class="auth-logo" />
-      </span>
       <p class="tagline">ШАГ ЗА ШАГОМ К ЗДОРОВЬЮ</p>
     </div>
 
-    <!-- Token processing -->
     @if (tokenProcessing) {
       <div class="status-block">
         <tui-loader />
@@ -18,15 +14,11 @@
 
     @if (!tokenProcessing) {
 
-      <!-- === Bot Auth === -->
-      <div class="auth-section">
+      <div class="auth-section auth-section--messenger">
         <div class="section-label">
           <span class="section-num">1</span>
           Войти через мессенджер
         </div>
-        <p class="hint">
-          Откройте бота, поделитесь номером телефона — и вы в системе.
-        </p>
 
         @if (loadingChallenge) {
           <div class="status-row">
@@ -44,71 +36,91 @@
 
         @if (tgUrl && !authenticated) {
           <div class="bot-links">
-            <a [href]="tgUrl" target="_blank" tuiButton appearance="primary" size="l" class="bot-btn">
+            <a
+              [href]="tgUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              tuiButton
+              appearance="primary"
+              size="l"
+              class="bot-btn"
+              (click)="onMessengerOpened()"
+            >
               <tui-icon icon="@tui.send" />
               Telegram
             </a>
             @if (maxUrl) {
-              <a [href]="maxUrl" target="_blank" tuiButton appearance="outline" size="l" class="bot-btn">
+              <a
+                [href]="maxUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                tuiButton
+                appearance="outline"
+                size="l"
+                class="bot-btn"
+                (click)="onMessengerOpened()"
+              >
                 <tui-icon icon="@tui.message-circle" />
                 MAX
               </a>
             }
           </div>
-          <div class="status-row muted">
-            <tui-loader size="xs" />
-            <span>Ожидание подтверждения...</span>
-          </div>
+          @if (messengerOpened) {
+            <div class="status-row muted">
+              <tui-loader size="xs" />
+              <span>Ожидание подтверждения...</span>
+            </div>
+          }
         }
       </div>
 
-      <!-- Divider -->
       <div class="divider"><span>или</span></div>
 
-      <!-- === Password Auth === -->
       <div class="auth-section">
         <div class="section-label">
           <span class="section-num">2</span>
           Войти по паролю
         </div>
-        <p class="hint">Номер телефона и пароль, полученный при регистрации через бота.</p>
 
         <form [formGroup]="loginForm" (ngSubmit)="loginWithPassword()" class="form">
           <div class="field">
-            <label class="field-label">Телефон</label>
-            <input
-              tuiTextfield
-              type="tel"
-              formControlName="phone"
-              placeholder="+7 999 000-00-00"
-              autocomplete="tel"
-              class="tui-input"
-            />
+            <tui-textfield>
+              <label tuiLabel>Телефон</label>
+              <input
+                tuiInput
+                type="tel"
+                formControlName="phone"
+                placeholder="+7 999 000-00-00"
+                autocomplete="tel"
+              />
+            </tui-textfield>
             @if (loginForm.get('phone')?.touched && loginForm.get('phone')?.invalid) {
               <span class="field-error">Введите номер в формате +7...</span>
             }
           </div>
 
-          <div class="field">
-            <label class="field-label">Пароль</label>
-            <div class="pwd-wrap">
+          <div class="field field-password">
+            <tui-textfield>
+              <label tuiLabel>Пароль</label>
               <input
-                tuiTextfield
+                tuiInput
                 [type]="showPassword ? 'text' : 'password'"
                 formControlName="password"
                 placeholder="Пароль"
                 autocomplete="current-password"
-                class="tui-input"
               />
-              <button
-                type="button"
-                class="pwd-toggle"
-                (click)="showPassword = !showPassword"
-                tabindex="-1"
-              >
-                <tui-icon [icon]="showPassword ? '@tui.eye-off' : '@tui.eye'" />
-              </button>
-            </div>
+            </tui-textfield>
+            <button
+              type="button"
+              tuiButton
+              appearance="flat"
+              size="xs"
+              class="pwd-toggle-taiga"
+              (click)="showPassword = !showPassword"
+              tabindex="-1"
+            >
+              <tui-icon [icon]="showPassword ? '@tui.eye-off' : '@tui.eye'" />
+            </button>
             @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
               <span class="field-error">Минимум 4 символа</span>
             }

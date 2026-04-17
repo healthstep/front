@@ -1,7 +1,9 @@
 import { Component, OnInit, AfterViewInit, inject, ElementRef, ViewChild, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TuiButton, TuiLoader, TuiIcon } from '@taiga-ui/core';
+import { TuiButton, TuiLoader, TuiIcon, TuiTextfield, TuiInput, TuiLabel } from '@taiga-ui/core';
+import { TuiDay } from '@taiga-ui/cdk/date-time';
+import { TuiInputDate } from '@taiga-ui/kit/components/input-date';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { NavComponent } from '../../shared/nav/nav.component';
@@ -42,7 +44,17 @@ interface WeeklyItem {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, TuiButton, TuiLoader, TuiIcon, NavComponent, FormsModule],
+  imports: [
+    CommonModule,
+    TuiButton,
+    TuiLoader,
+    TuiTextfield,
+    TuiInput,
+    TuiLabel,
+    ...TuiInputDate,
+    NavComponent,
+    FormsModule,
+  ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
@@ -70,9 +82,14 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   editingId: string | null = null;
   editValue = '';
-  editMeasuredAt = '';
+  /** Дата анализа для Taiga `tuiInputDate` (не нативный `type="date"`). */
+  editMeasuredAtDay: TuiDay | null = null;
   confirmEdit: string | null = null;
-  today = new Date().toISOString().split('T')[0];
+
+  /** Верхняя граница даты анализа — сегодня по локальному времени. */
+  get maxAnalysisDay(): TuiDay {
+    return TuiDay.currentLocal();
+  }
 
   private chartInstance: any = null;
 
@@ -134,8 +151,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         this.criteriaEntries = entries;
         this.buildGroups(entries);
         this.loading = false;
-        if (this.activeTab === 'chart') {
-          setTimeout(() => this.renderChart(), 50);
+        if (this.activeTab === 'criteria') {
+          setTimeout(() => this.renderChart(), 80);
         }
       },
       error: () => (this.loading = false),
@@ -212,8 +229,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   onTabChange(tab: string): void {
     const prev = this.activeTab;
     this.activeTab = tab;
-    if (tab === 'chart') {
-      setTimeout(() => this.renderChart(), 50);
+    if (tab === 'criteria') {
+      setTimeout(() => this.renderChart(), 80);
     }
     if (tab === 'weekly' && tab !== prev) {
       this.refreshWeekly();
@@ -232,8 +249,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.confirmEdit = null;
     this.editingId = entry.criterion_id;
     this.editValue = entry.value || '';
-    // Keep existing date if set, otherwise default to today
-    this.editMeasuredAt = this.today;
+    this.editMeasuredAtDay = TuiDay.currentLocal();
   }
 
   cancelConfirm(): void {
@@ -243,7 +259,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   cancelEdit(): void {
     this.editingId = null;
     this.editValue = '';
-    this.editMeasuredAt = '';
+    this.editMeasuredAtDay = null;
     this.confirmEdit = null;
   }
 
@@ -251,7 +267,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     const value = String(this.editValue ?? '').trim();
     if (!value) return;
     this.savingCriterionId = entry.criterion_id;
-    this.api.setUserCriterion(entry.criterion_id, value, this.editMeasuredAt || undefined).subscribe({
+    const measuredAt = this.editMeasuredAtDay?.toJSON();
+    this.api.setUserCriterion(entry.criterion_id, value, measuredAt || undefined).subscribe({
       next: () => {
         this.savingCriterionId = null;
         entry.value = value;

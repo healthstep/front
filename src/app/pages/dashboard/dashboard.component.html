@@ -36,18 +36,29 @@
 
   <!-- Tabs -->
   <div class="tabs">
-    <button type="button" class="tab" [class.active]="activeTab === 'criteria'" (click)="onTabChange('criteria')">
+    <button
+      type="button"
+      tuiButton
+      size="s"
+      class="tab"
+      [appearance]="activeTab === 'criteria' ? 'primary' : 'flat'"
+      (click)="onTabChange('criteria')"
+    >
       🔬 Показатели
     </button>
-    <button type="button" class="tab" [class.active]="activeTab === 'weekly'" (click)="onTabChange('weekly')">
-      📅 Неделя
-    </button>
-    <button type="button" class="tab" [class.active]="activeTab === 'chart'" (click)="onTabChange('chart')">
-      📈 График
+    <button
+      type="button"
+      tuiButton
+      size="s"
+      class="tab"
+      [appearance]="activeTab === 'weekly' ? 'primary' : 'flat'"
+      (click)="onTabChange('weekly')"
+    >
+      📅 Рекомендации на неделю
     </button>
   </div>
 
-  <!-- Criteria Tab -->
+  <!-- Criteria Tab + chart -->
   <section class="card criteria-card" *ngIf="activeTab === 'criteria'">
     @if (loading) {
       <div class="loading-state">
@@ -107,37 +118,36 @@
                     <div class="bool-choice">
                       <button
                         type="button"
-                        class="bool-opt bool-yes"
-                        [class.active]="editValue === '1'"
+                        tuiButton
+                        size="s"
+                        [appearance]="editValue === '1' ? 'primary' : 'outline'"
                         (click)="editValue = '1'"
-                      >✅ Да</button>
+                      >Да</button>
                       <button
                         type="button"
-                        class="bool-opt bool-no"
-                        [class.active]="editValue === '0'"
+                        tuiButton
+                        size="s"
+                        [appearance]="editValue === '0' ? 'primary' : 'outline'"
                         (click)="editValue = '0'"
-                      >❌ Нет</button>
+                      >Нет</button>
                     </div>
                   } @else {
-                    <input
-                      [(ngModel)]="editValue"
-                      type="number"
-                      class="edit-input"
-                      (keyup.enter)="saveValue(entry)"
-                      placeholder="Введите значение"
-                      autofocus
-                    />
+                    <tui-textfield class="edit-textfield">
+                      <label tuiLabel>Значение</label>
+                      <input
+                        tuiInput
+                        [(ngModel)]="editValue"
+                        type="number"
+                        (keyup.enter)="saveValue(entry)"
+                        placeholder="Введите значение"
+                      />
+                    </tui-textfield>
                   }
 
-                  <div class="date-row">
-                    <label class="date-label">📅 Дата анализа</label>
-                    <input
-                      type="date"
-                      [(ngModel)]="editMeasuredAt"
-                      [max]="today"
-                      class="date-input"
-                    />
-                  </div>
+                  <tui-textfield class="edit-textfield">
+                    <label tuiLabel>Дата анализа</label>
+                    <input tuiInputDate [(ngModel)]="editMeasuredAtDay" [max]="maxAnalysisDay" />
+                  </tui-textfield>
 
                   <div class="edit-actions">
                     <button
@@ -150,7 +160,7 @@
                       @if (savingCriterionId === entry.criterion_id) {
                         <tui-loader size="xs" />
                       } @else {
-                        ✅ Сохранить
+                        Сохранить
                       }
                     </button>
                     <button tuiButton size="s" appearance="ghost" (click)="cancelEdit()">
@@ -165,7 +175,6 @@
       </div>
     }
 
-    <!-- Ungrouped criteria -->
     @if (ungroupedEntries.length > 0) {
       <div class="criterion-group">
         <h3 class="group-name">
@@ -203,19 +212,22 @@
                   <div class="edit-form-label"><strong>{{ entry.criterion_name }}</strong></div>
                   @if (entry.input_type === 'boolean' || entry.input_type === 'check') {
                     <div class="bool-choice">
-                      <button type="button" class="bool-opt bool-yes" [class.active]="editValue === '1'" (click)="editValue = '1'">✅ Да</button>
-                      <button type="button" class="bool-opt bool-no" [class.active]="editValue === '0'" (click)="editValue = '0'">❌ Нет</button>
+                      <button type="button" tuiButton size="s" [appearance]="editValue === '1' ? 'primary' : 'outline'" (click)="editValue = '1'">Да</button>
+                      <button type="button" tuiButton size="s" [appearance]="editValue === '0' ? 'primary' : 'outline'" (click)="editValue = '0'">Нет</button>
                     </div>
                   } @else {
-                    <input [(ngModel)]="editValue" type="number" class="edit-input" (keyup.enter)="saveValue(entry)" placeholder="Значение" autofocus />
+                    <tui-textfield class="edit-textfield">
+                      <label tuiLabel>Значение</label>
+                      <input tuiInput [(ngModel)]="editValue" type="number" (keyup.enter)="saveValue(entry)" placeholder="Значение" />
+                    </tui-textfield>
                   }
-                  <div class="date-row">
-                    <label class="date-label">📅 Дата анализа</label>
-                    <input type="date" [(ngModel)]="editMeasuredAt" [max]="today" class="date-input" />
-                  </div>
+                  <tui-textfield class="edit-textfield">
+                    <label tuiLabel>Дата анализа</label>
+                    <input tuiInputDate [(ngModel)]="editMeasuredAtDay" [max]="maxAnalysisDay" />
+                  </tui-textfield>
                   <div class="edit-actions">
                     <button tuiButton size="s" appearance="primary" [disabled]="savingCriterionId === entry.criterion_id || !editValue" (click)="saveValue(entry)">
-                      @if (savingCriterionId === entry.criterion_id) { <tui-loader size="xs" /> } @else { ✅ Сохранить }
+                      @if (savingCriterionId === entry.criterion_id) { <tui-loader size="xs" /> } @else { Сохранить }
                     </button>
                     <button tuiButton size="s" appearance="ghost" (click)="cancelEdit()">Отмена</button>
                   </div>
@@ -226,6 +238,16 @@
         </div>
       </div>
     }
+
+    <div class="chart-section" *ngIf="!loading && (criteriaGroups.length > 0 || ungroupedEntries.length > 0)">
+      <h2 class="section-title chart-title">📈 Заполнение по группам</h2>
+      <div class="chart-wrap">
+        @if (loadingChart) {
+          <div class="chart-overlay"><tui-loader /></div>
+        }
+        <canvas #healthChart class="chart-canvas"></canvas>
+      </div>
+    </div>
   </section>
 
   <!-- Weekly Recommendations Tab -->
@@ -265,22 +287,11 @@
               (click)="goToAndEdit(item.criterion_id)"
               class="fill-btn"
             >
-              ✏️ Заполнить
+              Заполнить
             </button>
           }
         </div>
       </div>
-    </div>
-  </section>
-
-  <!-- Chart Tab -->
-  <section class="card chart-card" *ngIf="activeTab === 'chart'">
-    <h2 class="section-title">📈 Визуализация здоровья по группам</h2>
-    <div class="chart-wrap">
-      @if (loadingChart) {
-        <div class="chart-overlay"><tui-loader /></div>
-      }
-      <canvas #healthChart class="chart-canvas"></canvas>
     </div>
   </section>
 </div>

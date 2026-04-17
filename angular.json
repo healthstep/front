@@ -54,6 +54,8 @@
               }
             ],
             "styles": [
+              "node_modules/@taiga-ui/styles/taiga-ui-fonts.less",
+              "node_modules/@taiga-ui/styles/taiga-ui-theme.less",
               "src/styles.scss"
             ],
             "scripts": [],
@@ -89,6 +91,17 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "local-prod": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/app/environments/environment.ts",
+                  "with": "src/app/environments/environment.local-prod.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -101,6 +114,9 @@
             },
             "development": {
               "buildTarget": "front:build:development"
+            },
+            "local-prod": {
+              "buildTarget": "front:build:local-prod"
             }
           },
           "defaultConfiguration": "development"
@@ -124,6 +140,8 @@
               }
             ],
             "styles": [
+              "node_modules/@taiga-ui/styles/taiga-ui-fonts.less",
+              "node_modules/@taiga-ui/styles/taiga-ui-theme.less",
               "src/styles.scss"
             ],
             "scripts": []

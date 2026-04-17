@@ -1,17 +1,31 @@
 <app-nav />
-    <div class="page">
+<div class="admin-page">
+  <div class="admin-inner">
       <h1 class="page-title">
         <tui-icon icon="@tui.settings" class="title-icon" />
         Панель администратора
       </h1>
 
-      <!-- Tabs -->
-      <div class="tabs">
-        <button class="tab" [class.active]="tab === 'recommendations'" (click)="switchTab('recommendations')">
+      <div class="admin-tabs" role="tablist">
+        <button
+          type="button"
+          class="admin-tab"
+          role="tab"
+          [attr.aria-selected]="tab === 'recommendations'"
+          [class.active]="tab === 'recommendations'"
+          (click)="switchTab('recommendations')"
+        >
           <tui-icon icon="@tui.info" class="tab-icon" />
           Рекомендации
         </button>
-        <button class="tab" [class.active]="tab === 'criteria'" (click)="switchTab('criteria')">
+        <button
+          type="button"
+          class="admin-tab"
+          role="tab"
+          [attr.aria-selected]="tab === 'criteria'"
+          [class.active]="tab === 'criteria'"
+          (click)="switchTab('criteria')"
+        >
           <tui-icon icon="@tui.activity" class="tab-icon" />
           Критерии
         </button>
@@ -29,42 +43,57 @@
           <div class="form-grid">
 
             <div class="form-group">
-              <label>Критерий</label>
               @if (loadingCriteria && criteria.length === 0) {
                 <div class="field-loader"><tui-loader size="xs" /></div>
               }
               @if (!(loadingCriteria && criteria.length === 0)) {
-                <select [(ngModel)]="recForm.criterion_id" class="input">
-                  <option value="">— выберите критерий —</option>
-                  <option *ngFor="let c of criteria" [value]="c.id">{{ c.name }}</option>
-                </select>
+                <tui-textfield tuiTextfieldSize="m" [stringify]="stringifyCriterionId">
+                  <label tuiLabel>Критерий</label>
+                  <select
+                    tuiSelect
+                    [items]="criterionSelectIds"
+                    [placeholder]="'— выберите критерий —'"
+                    [(ngModel)]="recForm.criterion_id"
+                  ></select>
+                </tui-textfield>
               }
             </div>
 
             <div class="form-group">
-              <label>Тип</label>
-              <select [(ngModel)]="recForm.type" class="input">
-                <option value="reminder">reminder — нет данных</option>
-                <option value="recommendation">recommendation — образ жизни</option>
-                <option value="alarm">alarm — тревога (критично)</option>
-                <option value="expiration_reminder">expiration_reminder — срок истекает</option>
-              </select>
+                <tui-textfield tuiTextfieldSize="m" [stringify]="stringifyRecType">
+                  <label tuiLabel>Тип</label>
+                  <select tuiSelect [items]="recTypeIds" [(ngModel)]="recForm.type"></select>
+                </tui-textfield>
             </div>
 
             <div class="form-group full">
-              <label>Заголовок</label>
-              <input [(ngModel)]="recForm.title" class="input" placeholder="Например: Питание для повышения гемоглобина" />
+              <tui-textfield>
+                <label tuiLabel>Заголовок</label>
+                <input
+                  tuiInput
+                  [(ngModel)]="recForm.title"
+                  placeholder="Например: Питание для повышения гемоглобина"
+                />
+              </tui-textfield>
             </div>
 
             <div class="form-group full">
-              <label>Тексты уведомлений <span class="hint">(один вариант на строку)</span></label>
-              <textarea [(ngModel)]="recTextsRaw" class="input textarea" rows="4"
-                placeholder="Текст первого уведомления&#10;Текст второго уведомления&#10;..."></textarea>
+              <tui-textfield>
+                <label tuiLabel>Тексты уведомлений <span class="hint">(один вариант на строку)</span></label>
+                <textarea
+                  tuiTextarea
+                  [(ngModel)]="recTextsRaw"
+                  rows="4"
+                  placeholder="Текст первого уведомления&#10;Текст второго уведомления&#10;..."
+                ></textarea>
+              </tui-textfield>
             </div>
 
             <div class="form-group">
-              <label>Базовый вес аукциона</label>
-              <input [(ngModel)]="recForm.base_weight" type="number" min="1" class="input" placeholder="1–10" />
+              <tui-textfield>
+                <label tuiLabel>Базовый вес аукциона</label>
+                <input tuiInput [(ngModel)]="recForm.base_weight" type="number" min="1" placeholder="1–10" />
+              </tui-textfield>
             </div>
 
           </div>
@@ -128,54 +157,62 @@
           <div class="form-grid">
 
             <div class="form-group full">
-              <label>Название</label>
-              <input [(ngModel)]="critForm.name" class="input" placeholder="Например: Гемоглобин" />
+              <tui-textfield>
+                <label tuiLabel>Название</label>
+                <input tuiInput [(ngModel)]="critForm.name" placeholder="Например: Гемоглобин" />
+              </tui-textfield>
             </div>
 
             <div class="form-group">
-              <label>Группа</label>
               @if (loadingGroups && groups.length === 0) {
                 <div class="field-loader"><tui-loader size="xs" /></div>
               }
               @if (!(loadingGroups && groups.length === 0)) {
-                <select [(ngModel)]="critForm.group_id" class="input">
-                  <option value="">— без группы —</option>
-                  <option *ngFor="let g of groups" [value]="g.id">{{ g.name }}</option>
-                </select>
+                <tui-textfield tuiTextfieldSize="m" [stringify]="stringifyGroupId">
+                  <label tuiLabel>Группа</label>
+                  <select tuiSelect [items]="groupSelectIds" [(ngModel)]="critForm.group_id"></select>
+                </tui-textfield>
               }
             </div>
 
             <div class="form-group">
-              <label>Уровень (1/2/3)</label>
-              <input [(ngModel)]="critForm.level" type="number" min="1" max="3" class="input" />
+              <tui-textfield>
+                <label tuiLabel>Уровень (1/2/3)</label>
+                <input tuiInput [(ngModel)]="critForm.level" type="number" min="1" max="3" />
+              </tui-textfield>
             </div>
 
             <div class="form-group">
-              <label>Тип ввода</label>
-              <select [(ngModel)]="critForm.input_type" (ngModelChange)="onInputTypeChange()" class="input">
-                <option value="numeric">numeric — число</option>
-                <option value="check">check — факт (есть/нет)</option>
-                <option value="boolean">boolean — результат (+ / −)</option>
-              </select>
+                <tui-textfield tuiTextfieldSize="m" [stringify]="stringifyInputType">
+                  <label tuiLabel>Тип ввода</label>
+                  <select
+                    tuiSelect
+                    [items]="inputTypeIds"
+                    [(ngModel)]="critForm.input_type"
+                    (ngModelChange)="onInputTypeChange()"
+                  ></select>
+                </tui-textfield>
             </div>
 
             <div class="form-group">
-              <label>Пол</label>
-              <select [(ngModel)]="critForm.sex" class="input">
-                <option value="">Все</option>
-                <option value="male">Мужской</option>
-                <option value="female">Женский</option>
-              </select>
+                <tui-textfield tuiTextfieldSize="m" [stringify]="stringifySex">
+                  <label tuiLabel>Пол</label>
+                  <select tuiSelect [items]="sexIds" [(ngModel)]="critForm.sex"></select>
+                </tui-textfield>
             </div>
 
             <div class="form-group">
-              <label>Срок (дней, 0 = бессрочно)</label>
-              <input [(ngModel)]="critForm.lifetime" type="number" min="0" class="input" />
+              <tui-textfield>
+                <label tuiLabel>Срок (дней, 0 = бессрочно)</label>
+                <input tuiInput [(ngModel)]="critForm.lifetime" type="number" min="0" />
+              </tui-textfield>
             </div>
 
             <div class="form-group">
-              <label>Порядок сортировки</label>
-              <input [(ngModel)]="critForm.sort_order" type="number" min="0" class="input" />
+              <tui-textfield>
+                <label tuiLabel>Порядок сортировки</label>
+                <input tuiInput [(ngModel)]="critForm.sort_order" type="number" min="0" />
+              </tui-textfield>
             </div>
 
             <!-- Input type description -->
@@ -202,18 +239,24 @@
               </div>
 
               <div class="form-group">
-                <label>Норма: минимум</label>
-                <input [(ngModel)]="critMinStr" type="text" class="input" placeholder="Не задано" />
+                <tui-textfield>
+                  <label tuiLabel>Норма: минимум</label>
+                  <input tuiInput [(ngModel)]="critMinStr" type="text" placeholder="Не задано" />
+                </tui-textfield>
               </div>
 
               <div class="form-group">
-                <label>Норма: максимум</label>
-                <input [(ngModel)]="critMaxStr" type="text" class="input" placeholder="Не задано" />
+                <tui-textfield>
+                  <label tuiLabel>Норма: максимум</label>
+                  <input tuiInput [(ngModel)]="critMaxStr" type="text" placeholder="Не задано" />
+                </tui-textfield>
               </div>
 
               <div class="form-group">
-                <label>Дельта (некритичное отклонение, δ)</label>
-                <input [(ngModel)]="critDeltaStr" type="text" class="input" placeholder="Не задано" />
+                <tui-textfield>
+                  <label tuiLabel>Дельта (некритичное отклонение, δ)</label>
+                  <input tuiInput [(ngModel)]="critDeltaStr" type="text" placeholder="Не задано" />
+                </tui-textfield>
               </div>
 
               <div class="form-group norm-hint">
@@ -269,4 +312,5 @@
           </div>
         </section>
       </ng-container>
-    </div>
+  </div>
+</div>

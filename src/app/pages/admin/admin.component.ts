@@ -1,7 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TuiButton, TuiLoader, TuiIcon } from '@taiga-ui/core';
+import { TuiButton, TuiLoader, TuiIcon, TuiTextfield, TuiInput, TuiLabel } from '@taiga-ui/core';
+import { TuiTextarea } from '@taiga-ui/kit/components/textarea';
+import { TuiSelect } from '@taiga-ui/kit/components/select';
 import { NavComponent } from '../../shared/nav/nav.component';
 import { ApiService } from '../../core/services/api.service';
 
@@ -37,7 +39,19 @@ interface Group {
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, TuiButton, TuiLoader, TuiIcon, NavComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TuiButton,
+    TuiLoader,
+    TuiIcon,
+    TuiTextfield,
+    TuiInput,
+    TuiLabel,
+    ...TuiSelect,
+    ...TuiTextarea,
+    NavComponent,
+  ],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss',
 })
@@ -88,11 +102,11 @@ export class AdminComponent implements OnInit {
   // ---- Helpers ----
 
   emptyRec(): Partial<AdminRec> {
-    return { type: 'recommendation', base_weight: 1, texts: [] };
+    return { type: 'recommendation', base_weight: 1, texts: [], criterion_id: '' };
   }
 
   emptyCrit(): Partial<Criterion> {
-    return { level: 1, input_type: 'numeric', lifetime: 0, sort_order: 0, sex: '' };
+    return { level: 1, input_type: 'numeric', lifetime: 0, sort_order: 0, sex: '', group_id: '' };
   }
 
   criterionName(id: string): string {
@@ -112,6 +126,43 @@ export class AdminComponent implements OnInit {
     };
     return map[type] ?? type;
   }
+
+  /** Значения для `select[tuiSelect]` (модель — id, подпись через `stringify`). */
+  readonly recTypeIds = ['reminder', 'recommendation', 'alarm', 'expiration_reminder'] as const;
+  readonly inputTypeIds = ['numeric', 'check', 'boolean'] as const;
+  readonly sexIds = ['', 'male', 'female'] as const;
+
+  get criterionSelectIds(): string[] {
+    return this.criteria.map(c => c.id);
+  }
+
+  get groupSelectIds(): string[] {
+    return ['', ...this.groups.map(g => g.id)];
+  }
+
+  readonly stringifyRecType = (type: string): string => this.typeLabel(type);
+
+  readonly stringifyCriterionId = (id: string | undefined): string =>
+    id ? this.criterionName(id) : '';
+
+  readonly stringifyGroupId = (id: string | undefined): string =>
+    id == null || id === '' ? 'Без группы' : this.groupName(id);
+
+  readonly stringifyInputType = (t: string): string => {
+    const map: Record<string, string> = {
+      numeric: 'Число (numeric)',
+      check: 'Факт — есть / нет (check)',
+      boolean: 'Результат + / − (boolean)',
+    };
+    return map[t] ?? t;
+  };
+
+  readonly stringifySex = (s: string | undefined): string => {
+    if (s == null || s === '') return 'Все';
+    if (s === 'male') return 'Мужской';
+    if (s === 'female') return 'Женский';
+    return s;
+  };
 
   typeIcon(type: string): string {
     const map: Record<string, string> = {

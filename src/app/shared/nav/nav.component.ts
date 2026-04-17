@@ -19,6 +19,10 @@ export class NavComponent implements OnInit {
   isAdmin = false;
   navLoading = false;
 
+  get loggedIn(): boolean {
+    return this.auth.isAuthenticated();
+  }
+
   ngOnInit(): void {
     if (this.auth.isAuthenticated()) {
       this.navLoading = true;
@@ -35,7 +39,4 @@ export class NavComponent implements OnInit {
     }
   }
 
-  logout(): void {
-    this.auth.logout();
-  }
 }

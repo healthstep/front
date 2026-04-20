@@ -25,7 +25,31 @@ export class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    const t = this.getToken();
+    if (!t) return false;
+    return !this.isJwtExpired(t);
+  }
+
+  /** Если токен похож на JWT и `exp` уже в прошлом — считаем сессию недействительной. */
+  isJwtExpired(token: string): boolean {
+    const exp = this.readJwtExp(token);
+    if (exp == null) return false;
+    const now = Math.floor(Date.now() / 1000);
+    const skewSec = 30;
+    return exp <= now + skewSec;
+  }
+
+  private readJwtExp(token: string): number | null {
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const pad = b64.length % 4 ? '='.repeat(4 - (b64.length % 4)) : '';
+      const json = JSON.parse(atob(b64 + pad)) as { exp?: number };
+      return typeof json.exp === 'number' ? json.exp : null;
+    } catch {
+      return null;
+    }
   }
 
   setAuth(token: string, userId: string): void {

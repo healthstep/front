@@ -13,6 +13,12 @@ export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
+  const token = auth.getToken();
+  if (token && auth.isJwtExpired(token)) {
+    auth.clearAuth();
+    return router.createUrlTree(['/auth']);
+  }
+
   if (auth.isAuthenticated()) {
     return true;
   }

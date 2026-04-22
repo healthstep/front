@@ -1,25 +1,37 @@
-<nav class="navbar">
-  <a routerLink="/" class="nav-brand">
-    <span class="nav-logo-circle">
-      <img src="logo.png?v=3" alt="ЗОШ" class="nav-logo-img" />
+<nav class="navbar" [class.navbar--guest]="!loggedIn">
+  <a routerLink="/" class="nav-brand" aria-label="ЗОШ, на главную">
+    <span class="nav-logo-mark" aria-hidden="true">
+      <img src="logo.png?v=4" alt="" class="nav-logo-img" width="18" height="18" />
     </span>
+    <span class="nav-brand-text">ЗОШ</span>
   </a>
 
-  <div class="nav-center">
-    <div class="nav-links">
-      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
-        <tui-icon icon="@tui.bar-chart-2" class="nav-icon" />
-        Прогресс
-      </a>
-      <a *ngIf="isAdmin" routerLink="/admin" routerLinkActive="active" class="nav-link admin-link">
-        <tui-icon icon="@tui.settings" class="nav-icon" />
-        Админ
-      </a>
-      @if (navLoading) {
-        <span class="nav-loader"><tui-loader size="xs" /></span>
-      }
+  @if (loggedIn) {
+    <div class="nav-center">
+      <div class="nav-links">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+          <tui-icon icon="@tui.bar-chart-2" class="nav-icon" />
+          Прогресс
+        </a>
+        @if (isAdmin) {
+          <a routerLink="/admin" routerLinkActive="active" class="nav-link admin-link">
+            <tui-icon icon="@tui.settings" class="nav-icon" />
+            Админ
+          </a>
+        }
+        @if (navLoading) {
+          <span class="nav-loader"><tui-loader size="xs" /></span>
+        }
+      </div>
     </div>
-  </div>
+  } @else {
+    <nav class="nav-landing" aria-label="Секции на главной">
+      <a routerLink="/" fragment="how" class="nav-landing-link">Как работает</a>
+      <a routerLink="/" fragment="features" class="nav-landing-link">Возможности</a>
+      <a routerLink="/" fragment="privacy" class="nav-landing-link">Приватность</a>
+      <a routerLink="/" fragment="faq" class="nav-landing-link">Вопросы</a>
+    </nav>
+  }
 
   <div class="nav-right">
     @if (loggedIn) {
@@ -39,13 +51,24 @@
       <a
         routerLink="/auth"
         tuiButton
+        appearance="flat"
+        size="s"
+        class="nav-text-btn"
+        title="Войти"
+        aria-label="Войти"
+      >
+        Войти
+      </a>
+      <a
+        routerLink="/auth"
+        tuiButton
         appearance="primary"
         size="s"
-        class="nav-round-btn"
-        title="Войти или зарегистрироваться"
-        aria-label="Войти или зарегистрироваться"
+        class="nav-cta-btn"
+        title="Начать бесплатно: через Telegram или MAX, около 30 секунд"
+        aria-label="Начать бесплатно"
       >
-        <tui-icon icon="@tui.door-open" class="nav-round-icon" />
+        Начать
       </a>
     }
   </div>

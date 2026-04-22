@@ -1,3 +1,8 @@
+:host {
+  --profile-brand: var(--zosh-primary);
+  --profile-brand-gradient: linear-gradient(135deg, #17a6a2, #0b4f4e);
+}
+
 .page {
   max-width: 600px;
   margin: 0 auto;
@@ -31,7 +36,7 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: #38B6FF;
+  background: var(--profile-brand-gradient);
   color: white;
   font-size: 1.75rem;
   font-weight: 700;
@@ -112,5 +117,5 @@
 .title-icon {
   width: 1.125rem;
   height: 1.125rem;
-  color: #38B6FF;
+  color: var(--profile-brand);
 }

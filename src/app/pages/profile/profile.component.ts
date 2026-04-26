@@ -47,6 +47,12 @@ export class ProfileComponent implements OnInit {
   saveError: string | null = null;
   saveSuccess = false;
 
+  labImporting = false;
+  labError: string | null = null;
+  labPendingId: string | null = null;
+  labRows: { name: string; value: string; id: string }[] = [];
+  labNote = '';
+
   get initials(): string {
     if (!this.user?.display_name) return '?';
     return this.user.display_name
@@ -145,6 +151,60 @@ export class ProfileComponent implements OnInit {
     if (sex === 'male') return 'Мужской';
     if (sex === 'female') return 'Женский';
     return 'Не указан';
+  }
+
+  onLabFiles(ev: Event): void {
+    const input = ev.target as HTMLInputElement;
+    const fl = input.files;
+    if (!fl?.length) return;
+    this.labImporting = true;
+    this.labError = null;
+    this.labPendingId = null;
+    this.labRows = [];
+    this.labNote = '';
+    const arr = Array.from(fl).slice(0, 5);
+    this.api.importLabPdfs(arr, this.sex || undefined).subscribe({
+      next: (res: any) => {
+        this.labImporting = false;
+        const d = res.data || res;
+        this.labPendingId = d.pending_import_id || null;
+        this.labNote = d.model_note || '';
+        const uc = d.user_criteria || [];
+        this.labRows = uc.map((x: any) => ({
+          id: x.criterion_id,
+          name: x.criterion_name,
+          value: x.value,
+        }));
+        input.value = '';
+      },
+      error: (e: any) => {
+        this.labImporting = false;
+        this.labError = e?.error?.message || 'Не удалось обработать файлы';
+        input.value = '';
+      },
+    });
+  }
+
+  confirmLab(accept: boolean): void {
+    if (!this.labPendingId) return;
+    this.labImporting = true;
+    this.labError = null;
+    this.api.confirmLabImport(this.labPendingId, accept, this.sex || undefined).subscribe({
+      next: () => {
+        this.labImporting = false;
+        if (accept) {
+          this.saveSuccess = true;
+          setTimeout(() => (this.saveSuccess = false), 3000);
+        }
+        this.labPendingId = null;
+        this.labRows = [];
+        this.labNote = '';
+      },
+      error: (e: any) => {
+        this.labImporting = false;
+        this.labError = e?.error?.message || 'Ошибка подтверждения';
+      },
+    });
   }
 
   logout(): void {

@@ -77,4 +77,24 @@ export class ApiService {
   adminUpsertCriterion(criterion: any): Observable<any> {
     return this.http.post(`${this.base}/admin/criteria`, criterion);
   }
+
+  /** Multipart: form field `files` (PDF), optional `user_sex`. */
+  importLabPdfs(files: File[], userSex?: string): Observable<any> {
+    const fd = new FormData();
+    for (const f of files) {
+      fd.append('files', f, f.name);
+    }
+    if (userSex) {
+      fd.append('user_sex', userSex);
+    }
+    return this.http.post(`${this.base}/health/lab-import`, fd);
+  }
+
+  confirmLabImport(pendingId: string, accept: boolean, userSex?: string): Observable<any> {
+    return this.http.post(`${this.base}/health/lab-import/confirm`, {
+      pending_id: pendingId,
+      accept,
+      user_sex: userSex || '',
+    });
+  }
 }

@@ -34,6 +34,48 @@
     <span class="progress-pct">{{ progress.percent | number:'1.0-0' }}%</span>
   </section>
 
+  <section class="card lab-card" *ngIf="!loadingProgress || progress">
+    <h2 class="section-title">Загрузить анализы (PDF)</h2>
+    <p class="lab-hint">До 5 файлов. Система извлечёт показатели; вы сможете подтвердить или отклонить перед сохранением.</p>
+    <div class="lab-row">
+      <input
+        type="file"
+        accept="application/pdf,.pdf"
+        multiple
+        (change)="onLabFiles($event)"
+        [disabled]="labImporting"
+        class="lab-file"
+      />
+      @if (labImporting) {
+        <tui-loader size="s" />
+      }
+    </div>
+    @if (labError) {
+      <p class="error">{{ labError }}</p>
+    }
+    @if (labNote) {
+      <p class="lab-note">{{ labNote }}</p>
+    }
+    @if (labSaveSuccess) {
+      <p class="lab-success">Показатели обновлены</p>
+    }
+    @if (labRows.length) {
+      <ul class="lab-list">
+        @for (r of labRows; track r.id) {
+          <li><strong>{{ r.name }}:</strong> {{ r.value }}</li>
+        }
+      </ul>
+    }
+    @if (labPendingId && labRows.length) {
+      <div class="lab-actions">
+        <button tuiButton size="m" appearance="primary" (click)="confirmLab(true)" [disabled]="labImporting">
+          Сохранить в показатели
+        </button>
+        <button tuiButton size="m" appearance="ghost" (click)="confirmLab(false)" [disabled]="labImporting">Отклонить</button>
+      </div>
+    }
+  </section>
+
   <!-- Tabs -->
   <div class="tabs">
     <button

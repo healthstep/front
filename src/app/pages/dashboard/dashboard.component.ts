@@ -86,6 +86,16 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   editMeasuredAtDay: TuiDay | null = null;
   confirmEdit: string | null = null;
 
+  /** Пол пользователя (для разбора PDF). */
+  userSex = '';
+
+  labImporting = false;
+  labError: string | null = null;
+  labPendingId: string | null = null;
+  labRows: { name: string; value: string; id: string }[] = [];
+  labNote = '';
+  labSaveSuccess = false;
+
   /** Верхняя граница даты анализа — сегодня по локальному времени. */
   get maxAnalysisDay(): TuiDay {
     return TuiDay.currentLocal();
@@ -107,9 +117,15 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       progress: this.api.getProgress().pipe(catchError(() => of(null))),
       groups: this.api.listGroups().pipe(catchError(() => of(null))),
       weekly: this.api.getWeeklyRecommendations().pipe(catchError(() => of(null))),
+      me: this.api.getMe().pipe(catchError(() => of(null))),
     }).subscribe({
       next: bundle => {
         this.loadingProgress = false;
+        const m = bundle.me as any;
+        if (m) {
+          const d = m.data ?? m;
+          this.userSex = d.sex || '';
+        }
         const pr = bundle.progress as any;
         if (pr) {
           this.progress = pr.data ?? pr;
@@ -361,5 +377,60 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       expiration_reminder: '⏰',
     };
     return map[type] || '💡';
+  }
+
+  onLabFiles(ev: Event): void {
+    const input = ev.target as HTMLInputElement;
+    const fl = input.files;
+    if (!fl?.length) return;
+    this.labImporting = true;
+    this.labError = null;
+    this.labPendingId = null;
+    this.labRows = [];
+    this.labNote = '';
+    const arr = Array.from(fl).slice(0, 5);
+    this.api.importLabPdfs(arr, this.userSex || undefined).subscribe({
+      next: (res: any) => {
+        this.labImporting = false;
+        const d = res.data || res;
+        this.labPendingId = d.pending_import_id || null;
+        this.labNote = d.model_note || '';
+        const uc = d.user_criteria || [];
+        this.labRows = uc.map((x: any) => ({
+          id: x.criterion_id,
+          name: x.criterion_name,
+          value: x.value,
+        }));
+        input.value = '';
+      },
+      error: (e: any) => {
+        this.labImporting = false;
+        this.labError = e?.error?.message || 'Не удалось обработать файлы';
+        input.value = '';
+      },
+    });
+  }
+
+  confirmLab(accept: boolean): void {
+    if (!this.labPendingId) return;
+    this.labImporting = true;
+    this.labError = null;
+    this.api.confirmLabImport(this.labPendingId, accept, this.userSex || undefined).subscribe({
+      next: () => {
+        this.labImporting = false;
+        this.labSaveSuccess = accept;
+        if (this.labSaveSuccess) {
+          setTimeout(() => (this.labSaveSuccess = false), 3000);
+        }
+        this.labPendingId = null;
+        this.labRows = [];
+        this.labNote = '';
+        this.loadData();
+      },
+      error: (e: any) => {
+        this.labImporting = false;
+        this.labError = e?.error?.message || 'Ошибка подтверждения';
+      },
+    });
   }
 }

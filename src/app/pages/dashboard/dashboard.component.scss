@@ -13,6 +13,56 @@
   gap: 1.25rem;
 }
 
+.error {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin: 0.5rem 0 0;
+}
+
+.lab-hint {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+}
+
+.lab-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.lab-file {
+  font-size: 0.875rem;
+}
+
+.lab-note {
+  font-size: 0.85rem;
+  color: #6366f1;
+  margin: 0.5rem 0 0;
+}
+
+.lab-success {
+  font-size: 0.875rem;
+  color: #16a34a;
+  margin: 0.5rem 0 0;
+}
+
+.lab-list {
+  margin: 1rem 0 0;
+  padding-left: 1.25rem;
+  color: #1e293b;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.lab-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
 .card {
   background: white;
   border-radius: 1rem;

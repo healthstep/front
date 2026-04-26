@@ -34,22 +34,34 @@
     <span class="progress-pct">{{ progress.percent | number:'1.0-0' }}%</span>
   </section>
 
-  <section class="card lab-card" *ngIf="!loadingProgress || progress">
+  <section class="card lab-card" *ngIf="(!loadingProgress || progress) && isBrowser">
     <h2 class="section-title">Загрузить анализы (PDF)</h2>
     <p class="lab-hint">До 5 файлов. Система извлечёт показатели; вы сможете подтвердить или отклонить перед сохранением.</p>
-    <div class="lab-row">
+
+    <label tuiInputFiles [tuiInputFiles]="'l'" class="lab-input-files">
       <input
-        type="file"
+        tuiInputFiles
+        [formControl]="labFileControl"
+        [multiple]="true"
         accept="application/pdf,.pdf"
-        multiple
-        (change)="onLabFiles($event)"
         [disabled]="labImporting"
-        class="lab-file"
+        (reject)="onLabReject($event)"
       />
-      @if (labImporting) {
-        <tui-loader size="s" />
+    </label>
+
+    <tui-files class="lab-files-list tui-space_top-2">
+      @for (file of labFilesList; track file.name + '-' + file.size + '-' + file.lastModified) {
+        <tui-file
+          [file]="file"
+          [state]="labImporting ? 'loading' : 'normal'"
+          (remove)="removeLabFile(file)"
+        />
       }
-    </div>
+    </tui-files>
+    @if (labImporting && !labFilesList.length) {
+      <div class="lab-loading-inline"><tui-loader size="s" /> <span>Загрузка…</span></div>
+    }
+
     @if (labError) {
       <p class="error">{{ labError }}</p>
     }
@@ -191,12 +203,16 @@
                     <input tuiInputDate [(ngModel)]="editMeasuredAtDay" [max]="maxAnalysisDay" />
                   </tui-textfield>
 
+                  @if (criterionSaveError) {
+                    <p class="error edit-error">{{ criterionSaveError }}</p>
+                  }
+
                   <div class="edit-actions">
                     <button
                       tuiButton
                       size="s"
                       appearance="primary"
-                      [disabled]="savingCriterionId === entry.criterion_id || !editValue"
+                      [disabled]="savingCriterionId === entry.criterion_id || !canSaveEdit(entry)"
                       (click)="saveValue(entry)"
                     >
                       @if (savingCriterionId === entry.criterion_id) {
@@ -267,8 +283,11 @@
                     <label tuiLabel>Дата анализа</label>
                     <input tuiInputDate [(ngModel)]="editMeasuredAtDay" [max]="maxAnalysisDay" />
                   </tui-textfield>
+                  @if (criterionSaveError) {
+                    <p class="error edit-error">{{ criterionSaveError }}</p>
+                  }
                   <div class="edit-actions">
-                    <button tuiButton size="s" appearance="primary" [disabled]="savingCriterionId === entry.criterion_id || !editValue" (click)="saveValue(entry)">
+                    <button tuiButton size="s" appearance="primary" [disabled]="savingCriterionId === entry.criterion_id || !canSaveEdit(entry)" (click)="saveValue(entry)">
                       @if (savingCriterionId === entry.criterion_id) { <tui-loader size="xs" /> } @else { Сохранить }
                     </button>
                     <button tuiButton size="s" appearance="ghost" (click)="cancelEdit()">Отмена</button>

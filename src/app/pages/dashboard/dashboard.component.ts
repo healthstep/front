@@ -1,10 +1,12 @@
-import { Component, OnInit, AfterViewInit, inject, ElementRef, ViewChild, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, inject, ElementRef, ViewChild, PLATFORM_ID, DestroyRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TuiButton, TuiLoader, TuiIcon, TuiTextfield, TuiInput, TuiLabel } from '@taiga-ui/core';
 import { TuiDay } from '@taiga-ui/cdk/date-time';
 import { TuiInputDate } from '@taiga-ui/kit/components/input-date';
-import { forkJoin, of } from 'rxjs';
+import { TuiFiles, tuiFilesAccepted, type TuiFileLike } from '@taiga-ui/kit/components/files';
+import { filter, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { NavComponent } from '../../shared/nav/nav.component';
 import { ApiService } from '../../core/services/api.service';
@@ -52,17 +54,20 @@ interface WeeklyItem {
     TuiInput,
     TuiLabel,
     ...TuiInputDate,
+    ...TuiFiles,
     NavComponent,
     FormsModule,
+    ReactiveFormsModule,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
-export class DashboardComponent implements OnInit, AfterViewInit {
+export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('healthChart') chartCanvasRef!: ElementRef<HTMLCanvasElement>;
 
   private api = inject(ApiService);
   private platformId = inject(PLATFORM_ID);
+  private destroyRef = inject(DestroyRef);
 
   loading = true;
   loadingProgress = true;
@@ -89,6 +94,9 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   /** Пол пользователя (для разбора PDF). */
   userSex = '';
 
+  /** Зона загрузки PDF (Taiga InputFiles). */
+  readonly labFileControl = new FormControl<readonly TuiFileLike[] | null>(null);
+  isBrowser = false;
   labImporting = false;
   labError: string | null = null;
   labPendingId: string | null = null;
@@ -96,18 +104,50 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   labNote = '';
   labSaveSuccess = false;
 
-  /** Верхняя граница даты анализа — сегодня по локальному времени. */
-  get maxAnalysisDay(): TuiDay {
-    return TuiDay.currentLocal();
-  }
+  /**
+   * Верхняя граница даты анализа (текущий день). Стабильная ссылка — не геттер:
+   * иначе [max] на tuiInputDate даёт новый TuiDay на каждом change detection и вешает UI.
+   */
+  maxAnalysisDay: TuiDay = TuiDay.currentLocal();
+
+  /** Сообщение об ошибке при сохранении показателя (см. saveValue). */
+  criterionSaveError: string | null = null;
 
   private chartInstance: any = null;
+  private chartFrame = 0;
 
   ngOnInit(): void {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+    if (this.isBrowser) {
+      this.maxAnalysisDay = TuiDay.currentLocal();
+    }
+    this.labFileControl.valueChanges
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        filter(() => !this.labImporting),
+        filter(() => tuiFilesAccepted(this.labFileControl).length > 0),
+      )
+      .subscribe(() => {
+        const files = tuiFilesAccepted(this.labFileControl).slice(0, 5);
+        this.runLabImportFromFiles(files);
+      });
     this.loadData();
   }
 
+  ngOnDestroy(): void {
+    if (this.chartFrame) {
+      cancelAnimationFrame(this.chartFrame);
+      this.chartFrame = 0;
+    }
+    this.chartInstance?.destroy?.();
+    this.chartInstance = null;
+  }
+
   ngAfterViewInit(): void {}
+
+  get labFilesList(): File[] {
+    return tuiFilesAccepted(this.labFileControl);
+  }
 
   loadData(): void {
     this.loading = true;
@@ -168,7 +208,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         this.buildGroups(entries);
         this.loading = false;
         if (this.activeTab === 'criteria') {
-          setTimeout(() => this.renderChart(), 80);
+          this.scheduleChartRender();
         }
       },
       error: () => (this.loading = false),
@@ -193,8 +233,20 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.criteriaGroups = Array.from(groupMap.values()).filter(g => g.entries.length > 0);
   }
 
+  /** Откладывает отрисовку графика в animation frame, чтобы не блокировать клик/ввод. */
+  scheduleChartRender(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    if (this.chartFrame) {
+      cancelAnimationFrame(this.chartFrame);
+    }
+    this.chartFrame = requestAnimationFrame(() => {
+      this.chartFrame = 0;
+      void this.renderChart();
+    });
+  }
+
   async renderChart(): Promise<void> {
-    if (!isPlatformBrowser(this.platformId) || !this.chartCanvasRef) return;
+    if (!isPlatformBrowser(this.platformId) || !this.chartCanvasRef?.nativeElement) return;
 
     this.loadingChart = true;
     try {
@@ -246,7 +298,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     const prev = this.activeTab;
     this.activeTab = tab;
     if (tab === 'criteria') {
-      setTimeout(() => this.renderChart(), 80);
+      this.scheduleChartRender();
     }
     if (tab === 'weekly' && tab !== prev) {
       this.refreshWeekly();
@@ -262,6 +314,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   }
 
   openEdit(entry: CriterionEntry): void {
+    this.criterionSaveError = null;
     this.confirmEdit = null;
     this.editingId = entry.criterion_id;
     this.editValue = entry.value || '';
@@ -273,15 +326,55 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   }
 
   cancelEdit(): void {
+    this.criterionSaveError = null;
     this.editingId = null;
     this.editValue = '';
     this.editMeasuredAtDay = null;
     this.confirmEdit = null;
   }
 
+  /**
+   * Кнопка «Сохранить»: нельзя использовать `!editValue` — для чисел значение 0 валидно, но `!0 === true`.
+   */
+  canSaveEdit(entry: CriterionEntry): boolean {
+    if (entry.input_type === 'check' || entry.input_type === 'boolean') {
+      return this.editValue === '0' || this.editValue === '1';
+    }
+    const v = this.editValue as string | number | null | undefined;
+    if (v === null || v === undefined) return false;
+    if (typeof v === 'number') return !Number.isNaN(v);
+    return String(v).trim() !== '';
+  }
+
+  /** Лёгкое обновление списка и прогресса без полного loadData (меньше работы = меньше фризов). */
+  private refreshAfterCriterionSave(): void {
+    forkJoin({
+      progress: this.api.getProgress().pipe(catchError(() => of(null))),
+      entries: this.api.getUserCriteria().pipe(catchError(() => of(null))),
+    }).subscribe({
+      next: ({ progress, entries }) => {
+        if (progress) {
+          const p = progress as { data?: unknown };
+          this.progress = (p as any).data ?? p;
+        }
+        const e = entries as { data?: CriterionEntry[] } | CriterionEntry[] | null;
+        const list: CriterionEntry[] = Array.isArray(e) ? e : (e as any)?.data || [];
+        this.criteriaEntries = list;
+        this.buildGroups(this.criteriaEntries);
+        this.scheduleChartRender();
+      },
+    });
+  }
+
   saveValue(entry: CriterionEntry): void {
-    const value = String(this.editValue ?? '').trim();
-    if (!value) return;
+    this.criterionSaveError = null;
+    if (!this.canSaveEdit(entry)) return;
+
+    const value =
+      entry.input_type === 'check' || entry.input_type === 'boolean'
+        ? String(this.editValue)
+        : String(this.editValue ?? '').trim();
+
     this.savingCriterionId = entry.criterion_id;
     const measuredAt = this.editMeasuredAtDay?.toJSON();
     this.api.setUserCriterion(entry.criterion_id, value, measuredAt || undefined).subscribe({
@@ -289,11 +382,11 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         this.savingCriterionId = null;
         entry.value = value;
         this.cancelEdit();
-        this.loadData();
+        this.refreshAfterCriterionSave();
       },
-      error: () => {
+      error: (e: { error?: { message?: string } }) => {
         this.savingCriterionId = null;
-        this.cancelEdit();
+        this.criterionSaveError = e?.error?.message || 'Не удалось сохранить. Попробуйте ещё раз.';
       },
     });
   }
@@ -379,19 +472,27 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     return map[type] || '💡';
   }
 
-  onLabFiles(ev: Event): void {
-    const input = ev.target as HTMLInputElement;
-    const fl = input.files;
-    if (!fl?.length) return;
+  removeLabFile(f: File): void {
+    const isSame = (a: File, b: File) =>
+      a === b || (a.name === b.name && a.size === b.size && a.lastModified === b.lastModified);
+    const rest = tuiFilesAccepted(this.labFileControl).filter(x => !isSame(x, f));
+    this.labFileControl.setValue(rest.length > 0 ? rest : null, { emitEvent: false });
+  }
+
+  onLabReject(_files: File[]): void {
+    this.labError = 'Разрешены только PDF-файлы';
+  }
+
+  private runLabImportFromFiles(files: File[]): void {
     this.labImporting = true;
     this.labError = null;
     this.labPendingId = null;
     this.labRows = [];
     this.labNote = '';
-    const arr = Array.from(fl).slice(0, 5);
-    this.api.importLabPdfs(arr, this.userSex || undefined).subscribe({
+    this.api.importLabPdfs(files, this.userSex || undefined).subscribe({
       next: (res: any) => {
         this.labImporting = false;
+        this.labFileControl.setValue(null, { emitEvent: false });
         const d = res.data || res;
         this.labPendingId = d.pending_import_id || null;
         this.labNote = d.model_note || '';
@@ -401,12 +502,11 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           name: x.criterion_name,
           value: x.value,
         }));
-        input.value = '';
       },
       error: (e: any) => {
         this.labImporting = false;
+        this.labFileControl.setValue(null, { emitEvent: false });
         this.labError = e?.error?.message || 'Не удалось обработать файлы';
-        input.value = '';
       },
     });
   }

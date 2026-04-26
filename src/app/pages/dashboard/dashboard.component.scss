@@ -25,14 +25,23 @@
   margin: 0 0 1rem;
 }
 
-.lab-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+/* Taiga InputFiles: зона на всю ширину карточки */
+.lab-input-files {
+  display: block;
+  min-inline-size: 0;
+  width: 100%;
 }
 
-.lab-file {
+.lab-files-list {
+  width: 100%;
+}
+
+.lab-loading-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  color: #64748b;
   font-size: 0.875rem;
 }
 

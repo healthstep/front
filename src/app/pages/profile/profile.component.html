@@ -1,0 +1,138 @@
+<app-nav />
+<div class="page">
+  <div class="card">
+    <h2 class="page-title">
+      <tui-icon icon="@tui.user" class="title-icon" />
+      Профиль
+    </h2>
+
+    @if (loading) {
+      <tui-loader />
+    }
+
+    @if (!loading && user) {
+      <div class="profile-avatar">
+        <div class="avatar-circle">{{ initials }}</div>
+      </div>
+
+      <div class="profile-info">
+        <div class="field-group">
+          <span class="field-label">Имя</span>
+          @if (editingName) {
+            <div class="field-edit">
+              <tui-textfield class="field-textfield">
+                <label tuiLabel>Имя</label>
+                <input tuiInput [(ngModel)]="displayName" type="text" />
+              </tui-textfield>
+              <button tuiButton size="s" appearance="primary" (click)="saveName()" [disabled]="saving">
+                @if (saving) { <tui-loader size="xs" /> } @else { Сохранить }
+              </button>
+              <button tuiButton size="s" appearance="ghost" (click)="cancelNameEdit()">Отмена</button>
+            </div>
+          } @else {
+            <div class="field-value">
+              <span>{{ user.display_name || 'Не указано' }}</span>
+              <button tuiButton size="xs" appearance="ghost" (click)="editingName = true">
+                <tui-icon icon="@tui.pencil" />
+              </button>
+            </div>
+          }
+        </div>
+
+        <div class="field-group">
+          <span class="field-label">Телефон</span>
+          <div class="field-value">
+            <span>{{ user.phone_e164 || '—' }}</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <span class="field-label">Дата рождения</span>
+          @if (editingBirth) {
+            <div class="field-edit field-edit-stack">
+              <tui-textfield class="field-textfield">
+                <label tuiLabel>Дата рождения</label>
+                <input tuiInputDate [(ngModel)]="birthDateDay" />
+              </tui-textfield>
+              <div class="field-edit-actions">
+                <button tuiButton size="s" appearance="primary" (click)="saveBirth()" [disabled]="saving">
+                  @if (saving) { <tui-loader size="xs" /> } @else { Сохранить }
+                </button>
+                <button tuiButton size="s" appearance="ghost" (click)="cancelBirthEdit()">Отмена</button>
+              </div>
+            </div>
+          } @else {
+            <div class="field-value">
+              <span>{{ user.birth_date || 'Не указана' }}</span>
+              <button tuiButton size="xs" appearance="ghost" (click)="startBirthEdit()">
+                <tui-icon icon="@tui.pencil" />
+              </button>
+            </div>
+          }
+        </div>
+
+        <div class="field-group">
+          <span class="field-label">Пол</span>
+          @if (editingSex) {
+            <div class="field-edit field-edit-stack">
+              <div class="sex-buttons">
+                <button
+                  type="button"
+                  tuiButton
+                  size="s"
+                  [appearance]="sex === '' ? 'primary' : 'outline'"
+                  (click)="sex = ''"
+                >Не указан</button>
+                <button
+                  type="button"
+                  tuiButton
+                  size="s"
+                  [appearance]="sex === 'male' ? 'primary' : 'outline'"
+                  (click)="sex = 'male'"
+                >Мужской</button>
+                <button
+                  type="button"
+                  tuiButton
+                  size="s"
+                  [appearance]="sex === 'female' ? 'primary' : 'outline'"
+                  (click)="sex = 'female'"
+                >Женский</button>
+              </div>
+              <div class="field-edit-actions">
+                <button tuiButton size="s" appearance="primary" (click)="saveSex()" [disabled]="saving">
+                  @if (saving) { <tui-loader size="xs" /> } @else { Сохранить }
+                </button>
+                <button tuiButton size="s" appearance="ghost" (click)="editingSex = false">Отмена</button>
+              </div>
+            </div>
+          } @else {
+            <div class="field-value">
+              <span>{{ sexLabel(user.sex) }}</span>
+              <button tuiButton size="xs" appearance="ghost" (click)="editingSex = true">
+                <tui-icon icon="@tui.pencil" />
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (saveError) {
+        <p class="error">{{ saveError }}</p>
+      }
+
+      @if (saveSuccess) {
+        <p class="success">
+          <tui-icon icon="@tui.check-circle" class="success-icon" />
+          Профиль обновлён
+        </p>
+      }
+
+      <div class="profile-actions">
+        <button tuiButton appearance="outline" size="m" (click)="logout()">
+          <tui-icon icon="@tui.log-out" />
+          Выйти
+        </button>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,158 @@
+<app-nav />
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <p class="tagline">ШАГ ЗА ШАГОМ К ЗДОРОВЬЮ</p>
+    </div>
+
+    @if (tokenProcessing) {
+      <div class="status-block">
+        <tui-loader />
+        <p>Выполняется вход...</p>
+      </div>
+    }
+
+    @if (!tokenProcessing) {
+
+      <div class="auth-section auth-section--messenger">
+        <div class="section-label">
+          <span class="section-num">1</span>
+          Войти через мессенджер
+        </div>
+        <br>
+        @if (loadingChallenge) {
+          <div class="status-row">
+            <tui-loader size="s" />
+            <span>Подготовка ссылки...</span>
+          </div>
+        }
+
+        @if (challengeError) {
+          <div class="error-msg">{{ challengeError }}</div>
+          <button tuiButton appearance="outline" size="s" (click)="retryChallenge()" style="margin-top:0.5rem">
+            Попробовать снова
+          </button>
+        }
+
+        @if (tgUrl && !authenticated) {
+          <div class="bot-links">
+            <a
+              [href]="tgUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              tuiButton
+              appearance="primary"
+              size="l"
+              class="bot-btn"
+              (click)="onMessengerOpened()"
+            >
+              <tui-icon icon="@tui.send" />
+              Telegram
+            </a>
+            @if (maxUrl) {
+              <a
+                [href]="maxUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                tuiButton
+                appearance="outline"
+                size="l"
+                class="bot-btn"
+                (click)="onMessengerOpened()"
+              >
+                <tui-icon icon="@tui.message-circle" />
+                MAX
+              </a>
+            }
+          </div>
+          @if (messengerOpened) {
+            <div class="status-row muted">
+              <tui-loader size="xs" />
+              <span>Ожидание подтверждения...</span>
+            </div>
+          }
+        }
+      </div>
+
+      <div class="divider"><span>или</span></div>
+
+      <div class="auth-section">
+        <div class="section-label">
+          <span class="section-num">2</span>
+          Войти по паролю
+        </div>
+        <br>
+        <form [formGroup]="loginForm" (ngSubmit)="loginWithPassword()" class="form">
+          <div class="field">
+            <tui-textfield>
+              <label tuiLabel>Телефон</label>
+              <input
+                tuiInput
+                type="tel"
+                formControlName="phone"
+                placeholder="+7 999 000-00-00"
+                autocomplete="tel"
+              />
+            </tui-textfield>
+            @if (loginForm.get('phone')?.touched && loginForm.get('phone')?.invalid) {
+              <span class="field-error">Введите номер в формате +7...</span>
+            }
+          </div>
+
+          <div class="field field-password">
+            <tui-textfield>
+              <label tuiLabel>Пароль</label>
+              <input
+                tuiInput
+                [type]="showPassword ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="Пароль"
+                autocomplete="current-password"
+              />
+            </tui-textfield>
+            <button
+              type="button"
+              tuiButton
+              appearance="flat"
+              size="xs"
+              class="pwd-toggle-taiga"
+              (click)="showPassword = !showPassword"
+              tabindex="-1"
+            >
+              <tui-icon [icon]="showPassword ? '@tui.eye-off' : '@tui.eye'" />
+            </button>
+            @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
+              <span class="field-error">Минимум 4 символа</span>
+            }
+          </div>
+
+          @if (loginError) {
+            <div class="error-msg">{{ loginError }}</div>
+          }
+
+          <button
+            tuiButton
+            appearance="primary"
+            size="l"
+            type="submit"
+            [disabled]="loginLoading || loginForm.invalid"
+            class="submit-btn"
+          >
+            @if (loginLoading) {
+              <tui-loader size="xs" />
+            } @else {
+              Войти
+            }
+          </button>
+        </form>
+      </div>
+
+      @if (authenticated) {
+        <div class="success-block">
+          <tui-icon icon="@tui.check-circle" class="success-icon" />
+          <p>Авторизация прошла успешно! Перенаправление...</p>
+        </div>
+      }
+    }
+  </div>
+</div>

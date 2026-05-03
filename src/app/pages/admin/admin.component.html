@@ -1,0 +1,411 @@
+<app-nav />
+<div class="admin-page">
+  <div class="admin-inner">
+      <h1 class="page-title">
+        <tui-icon icon="@tui.settings" class="title-icon" />
+        Панель администратора
+      </h1>
+
+      <div class="admin-tabs" role="tablist">
+        <button
+          type="button"
+          class="admin-tab"
+          role="tab"
+          [attr.aria-selected]="tab === 'recommendations'"
+          [class.active]="tab === 'recommendations'"
+          (click)="switchTab('recommendations')"
+        >
+          <tui-icon icon="@tui.info" class="tab-icon" />
+          Рекомендации
+        </button>
+        <button
+          type="button"
+          class="admin-tab"
+          role="tab"
+          [attr.aria-selected]="tab === 'criteria'"
+          [class.active]="tab === 'criteria'"
+          (click)="switchTab('criteria')"
+        >
+          <tui-icon icon="@tui.activity" class="tab-icon" />
+          Критерии
+        </button>
+        <button
+          type="button"
+          class="admin-tab"
+          role="tab"
+          [attr.aria-selected]="tab === 'analyses'"
+          [class.active]="tab === 'analyses'"
+          (click)="switchTab('analyses')"
+        >
+          <tui-icon icon="@tui.file-text" class="tab-icon" />
+          Анализы
+        </button>
+      </div>
+
+      <!-- ===== Recommendations tab ===== -->
+      <ng-container *ngIf="tab === 'recommendations'">
+
+        <!-- Form card -->
+        <section class="card form-card">
+          <h2 class="section-title">
+            <tui-icon [icon]="editingRec ? '@tui.pencil' : '@tui.plus'" class="section-icon" />
+            {{ editingRec ? 'Редактировать рекомендацию' : 'Новая рекомендация' }}
+          </h2>
+          <div class="form-grid">
+
+            <div class="form-group">
+              @if (loadingCriteria && criteria.length === 0) {
+                <div class="field-loader"><tui-loader size="xs" /></div>
+              }
+              @if (!(loadingCriteria && criteria.length === 0)) {
+                <tui-textfield tuiTextfieldSize="m" [stringify]="stringifyCriterionId">
+                  <label tuiLabel>Критерий</label>
+                  <select
+                    tuiSelect
+                    [items]="criterionSelectIds"
+                    [placeholder]="'— выберите критерий —'"
+                    [(ngModel)]="recForm.criterion_id"
+                  ></select>
+                </tui-textfield>
+              }
+            </div>
+
+            <div class="form-group">
+                <tui-textfield tuiTextfieldSize="m" [stringify]="stringifyRecType">
+                  <label tuiLabel>Тип</label>
+                  <select tuiSelect [items]="recTypeIds" [(ngModel)]="recForm.type"></select>
+                </tui-textfield>
+            </div>
+
+            <div class="form-group full">
+              <tui-textfield>
+                <label tuiLabel>Заголовок</label>
+                <input
+                  tuiInput
+                  [(ngModel)]="recForm.title"
+                  placeholder="Например: Питание для повышения гемоглобина"
+                />
+              </tui-textfield>
+            </div>
+
+            <div class="form-group full">
+              <tui-textfield>
+                <label tuiLabel>Тексты уведомлений <span class="hint">(один вариант на строку)</span></label>
+                <textarea
+                  tuiTextarea
+                  [(ngModel)]="recTextsRaw"
+                  rows="4"
+                  placeholder="Текст первого уведомления&#10;Текст второго уведомления&#10;..."
+                ></textarea>
+              </tui-textfield>
+            </div>
+
+            <div class="form-group">
+              <tui-textfield>
+                <label tuiLabel>Базовый вес аукциона</label>
+                <input tuiInput [(ngModel)]="recForm.base_weight" type="number" min="1" placeholder="1–10" />
+              </tui-textfield>
+            </div>
+
+          </div>
+          <div class="form-actions">
+            <button tuiButton appearance="primary" size="m" [disabled]="savingRec" (click)="saveRec()">
+              <tui-loader *ngIf="savingRec" size="xs" />
+              {{ editingRec ? 'Сохранить изменения' : 'Добавить рекомендацию' }}
+            </button>
+            <button tuiButton appearance="ghost" size="m" (click)="cancelRec()" *ngIf="editingRec">Отмена</button>
+          </div>
+          <p class="error" *ngIf="recError">{{ recError }}</p>
+        </section>
+
+        <!-- List card -->
+        <section class="card">
+          <div class="card-header">
+            <h2 class="section-title">Список рекомендаций</h2>
+            <button tuiButton appearance="ghost" size="s" (click)="loadRecs()">
+              <tui-icon icon="@tui.refresh-cw" />
+              Обновить
+            </button>
+          </div>
+          <div *ngIf="loadingRecs" class="center"><tui-loader /></div>
+          <div *ngIf="!loadingRecs && recommendations.length === 0" class="empty">Нет рекомендаций.</div>
+          <div class="rec-list" *ngIf="!loadingRecs && recommendations.length > 0">
+            <div class="rec-item" *ngFor="let r of recommendations">
+              <div class="rec-header">
+                <span class="type-badge type-{{ r.type }}">
+                  <tui-icon [icon]="typeIcon(r.type)" class="type-icon" />
+                  {{ typeLabel(r.type) }}
+                </span>
+                <strong>{{ r.title }}</strong>
+                <span class="crit-name">{{ criterionName(r.criterion_id) }}</span>
+              </div>
+              <div class="rec-texts" *ngIf="r.texts?.length">
+                <span class="text-preview" *ngFor="let t of r.texts.slice(0, 2)">{{ t }}</span>
+                <span class="text-more" *ngIf="r.texts.length > 2">+{{ r.texts.length - 2 }} ещё</span>
+              </div>
+              <div class="rec-actions">
+                <button tuiButton size="xs" appearance="ghost" (click)="editRec(r)">
+                  <tui-icon icon="@tui.pencil" /> Изменить
+                </button>
+                <button tuiButton size="xs" appearance="destructive" [disabled]="deletingRecId === r.id" (click)="deleteRec(r.id)">
+                  @if (deletingRecId === r.id) { <tui-loader size="xs" /> } @else { <tui-icon icon="@tui.trash-2" /> Удалить }
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </ng-container>
+
+      <!-- ===== Criteria tab ===== -->
+      <ng-container *ngIf="tab === 'criteria'">
+
+        <!-- Form card -->
+        <section class="card form-card">
+          <h2 class="section-title">
+            <tui-icon [icon]="editingCrit ? '@tui.pencil' : '@tui.plus'" class="section-icon" />
+            {{ editingCrit ? 'Редактировать критерий' : 'Новый критерий' }}
+          </h2>
+          <div class="form-grid">
+
+            <div class="form-group full">
+              <tui-textfield>
+                <label tuiLabel>Название</label>
+                <input tuiInput [(ngModel)]="critForm.name" placeholder="Например: Гемоглобин" />
+              </tui-textfield>
+            </div>
+
+            <div class="form-group">
+              @if (loadingGroups && groups.length === 0) {
+                <div class="field-loader"><tui-loader size="xs" /></div>
+              }
+              @if (!(loadingGroups && groups.length === 0)) {
+                <tui-textfield tuiTextfieldSize="m" [stringify]="stringifyGroupId">
+                  <label tuiLabel>Группа</label>
+                  <select tuiSelect [items]="groupSelectIds" [(ngModel)]="critForm.group_id"></select>
+                </tui-textfield>
+              }
+            </div>
+
+            <div class="form-group">
+              @if (loadingAnalyses && analyses.length === 0) {
+                <div class="field-loader"><tui-loader size="xs" /></div>
+              }
+              @if (!(loadingAnalyses && analyses.length === 0)) {
+                <tui-textfield tuiTextfieldSize="m" [stringify]="stringifyAnalysisId">
+                  <label tuiLabel>Анализ (инструкция)</label>
+                  <select tuiSelect [items]="analysisSelectIds" [(ngModel)]="critForm.analysis_id"></select>
+                </tui-textfield>
+              }
+            </div>
+
+            <div class="form-group">
+              <tui-textfield>
+                <label tuiLabel>Уровень (1/2/3)</label>
+                <input tuiInput [(ngModel)]="critForm.level" type="number" min="1" max="3" />
+              </tui-textfield>
+            </div>
+
+            <div class="form-group">
+                <tui-textfield tuiTextfieldSize="m" [stringify]="stringifyInputType">
+                  <label tuiLabel>Тип ввода</label>
+                  <select
+                    tuiSelect
+                    [items]="inputTypeIds"
+                    [(ngModel)]="critForm.input_type"
+                    (ngModelChange)="onInputTypeChange()"
+                  ></select>
+                </tui-textfield>
+            </div>
+
+            <div class="form-group">
+                <tui-textfield tuiTextfieldSize="m" [stringify]="stringifySex">
+                  <label tuiLabel>Пол</label>
+                  <select tuiSelect [items]="sexIds" [(ngModel)]="critForm.sex"></select>
+                </tui-textfield>
+            </div>
+
+            <div class="form-group">
+              <tui-textfield>
+                <label tuiLabel>Срок (дней, 0 = бессрочно)</label>
+                <input tuiInput [(ngModel)]="critForm.lifetime" type="number" min="0" />
+              </tui-textfield>
+            </div>
+
+            <div class="form-group">
+              <tui-textfield>
+                <label tuiLabel>Порядок сортировки</label>
+                <input tuiInput [(ngModel)]="critForm.sort_order" type="number" min="0" />
+              </tui-textfield>
+            </div>
+
+            <!-- Input type description -->
+            <div class="form-group full input-type-desc" *ngIf="critForm.input_type">
+              <div class="type-info" [ngClass]="'info-' + critForm.input_type">
+                <ng-container *ngIf="critForm.input_type === 'numeric'">
+                  <strong>numeric</strong> — пользователь вводит число. Укажите ниже диапазон нормы.
+                </ng-container>
+                <ng-container *ngIf="critForm.input_type === 'check'">
+                  <strong>check</strong> — пользователь отмечает, сделал ли он это (например, посетил врача).
+                  «+» сохраняется, «−» игнорируется. Дополнительных полей не требуется.
+                </ng-container>
+                <ng-container *ngIf="critForm.input_type === 'boolean'">
+                  <strong>boolean</strong> — бинарный результат: «+» положительный (норма), «−» отрицательный
+                  (автоматически запускает рекомендацию-тревогу). Дополнительных полей не требуется.
+                </ng-container>
+              </div>
+            </div>
+
+            <!-- Normal range — numeric ONLY -->
+            <ng-container *ngIf="critForm.input_type === 'numeric'">
+              <div class="form-group section-divider full">
+                <span class="divider-label">Диапазон нормы</span>
+              </div>
+
+              <div class="form-group">
+                <tui-textfield>
+                  <label tuiLabel>Норма: минимум</label>
+                  <input tuiInput [(ngModel)]="critMinStr" type="text" placeholder="Не задано" />
+                </tui-textfield>
+              </div>
+
+              <div class="form-group">
+                <tui-textfield>
+                  <label tuiLabel>Норма: максимум</label>
+                  <input tuiInput [(ngModel)]="critMaxStr" type="text" placeholder="Не задано" />
+                </tui-textfield>
+              </div>
+
+              <div class="form-group">
+                <tui-textfield>
+                  <label tuiLabel>Дельта (некритичное отклонение, δ)</label>
+                  <input tuiInput [(ngModel)]="critDeltaStr" type="text" placeholder="Не задано" />
+                </tui-textfield>
+              </div>
+
+              <div class="form-group norm-hint">
+                <p class="hint-text">
+                  <strong>Норма:</strong> [мин; макс]<br>
+                  <strong>Предупреждение:</strong> [мин−δ; мин) или (макс; макс+δ]<br>
+                  <strong>Тревога:</strong> &lt; мин−δ или &gt; макс+δ
+                </p>
+              </div>
+            </ng-container>
+
+          </div>
+          <div class="form-actions">
+            <button tuiButton appearance="primary" size="m" [disabled]="savingCrit" (click)="saveCrit()">
+              <tui-loader *ngIf="savingCrit" size="xs" />
+              {{ editingCrit ? 'Сохранить изменения' : 'Добавить критерий' }}
+            </button>
+            <button tuiButton appearance="ghost" size="m" (click)="cancelCrit()" *ngIf="editingCrit">Отмена</button>
+          </div>
+          <p class="error" *ngIf="critError">{{ critError }}</p>
+        </section>
+
+        <!-- Criteria list card -->
+        <section class="card">
+          <div class="card-header">
+            <h2 class="section-title">Список критериев</h2>
+            <button tuiButton appearance="ghost" size="s" (click)="loadCriteria()">
+              <tui-icon icon="@tui.refresh-cw" />
+              Обновить
+            </button>
+          </div>
+          <div *ngIf="loadingCriteria" class="center"><tui-loader /></div>
+          <div *ngIf="!loadingCriteria && criteria.length === 0" class="empty">Нет критериев.</div>
+          <div class="crit-list" *ngIf="!loadingCriteria && criteria.length > 0">
+            <div class="crit-item" *ngFor="let c of criteria">
+              <div class="crit-header">
+                <strong>{{ c.name }}</strong>
+                <span class="badge badge-level">L{{ c.level }}</span>
+                <span class="badge badge-type">{{ c.input_type }}</span>
+                <span class="badge badge-group">{{ groupName(c.group_id) }}</span>
+                <span class="badge badge-analysis" *ngIf="analysisBadgeForCriterion(c)">{{ analysisBadgeForCriterion(c) }}</span>
+                <span class="badge badge-sex" *ngIf="c.sex">{{ c.sex }}</span>
+              </div>
+              <div class="crit-meta" *ngIf="c.min_value != null || c.max_value != null">
+                Норма: {{ c.min_value ?? '−∞' }} – {{ c.max_value ?? '+∞' }}
+                <span *ngIf="c.delta != null"> ± {{ c.delta }}</span>
+              </div>
+              <div class="rec-actions">
+                <button tuiButton size="xs" appearance="ghost" (click)="editCrit(c)">
+                  <tui-icon icon="@tui.pencil" /> Изменить
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </ng-container>
+
+      <!-- ===== Analyses tab ===== -->
+      <ng-container *ngIf="tab === 'analyses'">
+        <section class="card form-card">
+          <div class="card-header" style="margin-bottom: 1rem;">
+            <h2 class="section-title" style="margin: 0;">
+              <tui-icon [icon]="editingAnalysis ? '@tui.pencil' : '@tui.plus'" class="section-icon" />
+              {{ editingAnalysis ? 'Редактировать анализ' : 'Новый анализ' }}
+            </h2>
+            <button tuiButton appearance="ghost" size="s" type="button" (click)="startNewAnalysis()">
+              <tui-icon icon="@tui.plus" /> Очистить форму
+            </button>
+          </div>
+          <div class="form-grid">
+            <div class="form-group full">
+              <tui-textfield>
+                <label tuiLabel>Название</label>
+                <input tuiInput [(ngModel)]="analysisForm.name" placeholder="Например: Общий анализ крови" />
+              </tui-textfield>
+            </div>
+            <div class="form-group full">
+              <tui-textfield>
+                <label tuiLabel>Инструкция (как сдать / где получить)</label>
+                <textarea
+                  tuiTextarea
+                  [(ngModel)]="analysisForm.instruction"
+                  rows="6"
+                  placeholder="Текст для пользователя..."
+                ></textarea>
+              </tui-textfield>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button tuiButton appearance="primary" size="m" [disabled]="savingAnalysis" (click)="saveAnalysis()">
+              <tui-loader *ngIf="savingAnalysis" size="xs" />
+              {{ editingAnalysis ? 'Сохранить' : 'Добавить анализ' }}
+            </button>
+            <button tuiButton appearance="ghost" size="m" (click)="cancelAnalysis()" *ngIf="editingAnalysis">Отмена</button>
+          </div>
+          <p class="error" *ngIf="analysisError">{{ analysisError }}</p>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <h2 class="section-title">Список анализов</h2>
+            <button tuiButton appearance="ghost" size="s" type="button" (click)="loadAnalyses()">
+              <tui-icon icon="@tui.refresh-cw" />
+              Обновить
+            </button>
+          </div>
+          <div *ngIf="loadingAnalyses" class="center"><tui-loader /></div>
+          <div *ngIf="!loadingAnalyses && analyses.length === 0" class="empty">Нет анализов.</div>
+          <div class="crit-list" *ngIf="!loadingAnalyses && analyses.length > 0">
+            <div class="crit-item" *ngFor="let a of analyses">
+              <div class="crit-header">
+                <strong>id {{ a.id }}</strong>
+                <span class="badge badge-type">{{ a.name }}</span>
+              </div>
+              <div class="crit-meta" *ngIf="a.instruction">{{ a.instruction | slice:0:200 }}<span *ngIf="a.instruction.length > 200">…</span></div>
+              <div class="rec-actions">
+                <button tuiButton size="xs" appearance="ghost" (click)="editAnalysis(a)">
+                  <tui-icon icon="@tui.pencil" /> Изменить
+                </button>
+                <button tuiButton size="xs" appearance="destructive" [disabled]="deletingAnalysisId === a.id" (click)="deleteAnalysis(a.id)">
+                  @if (deletingAnalysisId === a.id) { <tui-loader size="xs" /> } @else { <tui-icon icon="@tui.trash-2" /> Удалить }
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </ng-container>
+  </div>
+</div>

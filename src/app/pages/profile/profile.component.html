@@ -127,6 +127,26 @@
         </p>
       }
 
+      <div class="advanced-section">
+        <span class="field-label">Режим параметров</span>
+        <label class="advanced-toggle-row">
+          <input
+            class="advanced-checkbox"
+            type="checkbox"
+            [(ngModel)]="advanced"
+            (change)="toggleAdvanced()"
+            [disabled]="savingAdvanced"
+          />
+          <span class="advanced-label-text">Расширенный профиль</span>
+        </label>
+        @if (advanced) {
+          <p class="advanced-hint">
+            Включены дополнительные показатели (уровень 2 и 3). Рекомендуется после заполнения
+            всех базовых показателей.
+          </p>
+        }
+      </div>
+
       <div class="profile-actions">
         <button tuiButton appearance="outline" size="m" (click)="logout()">
           <tui-icon icon="@tui.log-out" />

@@ -44,6 +44,9 @@ export class ProfileComponent implements OnInit {
   birthDateDay: TuiDay | null = null;
   sex = '';
 
+  advanced = false;
+  savingAdvanced = false;
+
   saveError: string | null = null;
   saveSuccess = false;
 
@@ -64,6 +67,7 @@ export class ProfileComponent implements OnInit {
         this.displayName = this.user.display_name || '';
         this.birthDate = this.user.birth_date || '';
         this.sex = this.user.sex || '';
+        this.advanced = !!this.user.advanced;
         this.loading = false;
       },
       error: () => (this.loading = false),
@@ -145,6 +149,20 @@ export class ProfileComponent implements OnInit {
     if (sex === 'male') return 'Мужской';
     if (sex === 'female') return 'Женский';
     return 'Не указан';
+  }
+
+  toggleAdvanced(): void {
+    this.savingAdvanced = true;
+    this.api.updateMe({ advanced: this.advanced }).subscribe({
+      next: () => {
+        this.user.advanced = this.advanced;
+        this.savingAdvanced = false;
+      },
+      error: () => {
+        this.advanced = !this.advanced;
+        this.savingAdvanced = false;
+      },
+    });
   }
 
   logout(): void {

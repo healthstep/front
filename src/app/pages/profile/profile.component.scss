@@ -93,6 +93,45 @@
   gap: 0.5rem;
 }
 
+.advanced-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.advanced-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.advanced-checkbox {
+  width: 1.125rem;
+  height: 1.125rem;
+  cursor: pointer;
+  accent-color: #17a6a2;
+  flex-shrink: 0;
+}
+
+.advanced-label-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.advanced-hint {
+  margin-top: 0.625rem;
+  padding: 0.625rem 0.875rem;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  color: #92400e;
+  line-height: 1.4;
+}
+
 .profile-actions {
   margin-top: 2rem;
   padding-top: 1.5rem;

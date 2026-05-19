@@ -138,11 +138,18 @@
             [disabled]="savingAdvanced"
           />
           <span class="advanced-label-text">Расширенный профиль</span>
+          @if (savingAdvanced) {
+            <tui-loader size="xs" class="advanced-loader" />
+          }
+          @if (advancedSaveSuccess) {
+            <tui-icon icon="@tui.check" class="advanced-saved-icon" />
+            <span class="advanced-saved-text">Сохранено</span>
+          }
         </label>
         @if (advanced) {
           <p class="advanced-hint">
             Включены дополнительные показатели (уровень 2 и 3). Рекомендуется после заполнения
-            всех базовых показателей.
+            всех базовых показателей. Перейдите на страницу «Прогресс», чтобы увидеть обновлённый список.
           </p>
         }
       </div>

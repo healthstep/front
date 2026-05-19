@@ -46,6 +46,7 @@ export class ProfileComponent implements OnInit {
 
   advanced = false;
   savingAdvanced = false;
+  advancedSaveSuccess = false;
 
   saveError: string | null = null;
   saveSuccess = false;
@@ -153,10 +154,13 @@ export class ProfileComponent implements OnInit {
 
   toggleAdvanced(): void {
     this.savingAdvanced = true;
+    this.advancedSaveSuccess = false;
     this.api.updateMe({ advanced: this.advanced }).subscribe({
       next: () => {
         this.user.advanced = this.advanced;
         this.savingAdvanced = false;
+        this.advancedSaveSuccess = true;
+        setTimeout(() => (this.advancedSaveSuccess = false), 3000);
       },
       error: () => {
         this.advanced = !this.advanced;

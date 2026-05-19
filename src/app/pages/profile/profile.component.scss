@@ -121,6 +121,23 @@
   color: #1e293b;
 }
 
+.advanced-loader {
+  color: #17a6a2;
+  flex-shrink: 0;
+}
+
+.advanced-saved-icon {
+  width: 1rem;
+  height: 1rem;
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.advanced-saved-text {
+  font-size: 0.875rem;
+  color: #16a34a;
+}
+
 .advanced-hint {
   margin-top: 0.625rem;
   padding: 0.625rem 0.875rem;

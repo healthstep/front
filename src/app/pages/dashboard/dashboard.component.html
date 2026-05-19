@@ -163,19 +163,20 @@
                           (click)="toggleInstruction(entry)"
                           class="instruction-toggle-btn"
                         >
-                          {{ instructionOpenForId === entry.criterion_id ? 'Скрыть' : 'Показать инструкцию' }}
+                          {{ instructionOpenForId === entry.criterion_id ? 'Скрыть' : 'Инструкция' }}
                         </button>
                       }
                       <button tuiButton size="xs" appearance="ghost" (click)="startEdit(entry)" class="edit-btn">
                         ✏️
                       </button>
                     </div>
-                    @if (instructionOpenForId === entry.criterion_id && entry.instruction?.trim()) {
-                      <p class="criterion-instruction">{{ entry.instruction }}</p>
-                    }
                   }
                 </div>
               </div>
+
+              @if (instructionOpenForId === entry.criterion_id && entry.instruction?.trim()) {
+                <div class="criterion-instruction" [innerHTML]="safeInstruction(entry.instruction)"></div>
+              }
 
               @if (editingId === entry.criterion_id) {
                 <div class="edit-form">
@@ -283,17 +284,18 @@
                           (click)="toggleInstruction(entry)"
                           class="instruction-toggle-btn"
                         >
-                          {{ instructionOpenForId === entry.criterion_id ? 'Скрыть' : 'Показать инструкцию' }}
+                          {{ instructionOpenForId === entry.criterion_id ? 'Скрыть' : 'Инструкция' }}
                         </button>
                       }
                       <button tuiButton size="xs" appearance="ghost" (click)="startEdit(entry)" class="edit-btn">✏️</button>
                     </div>
-                    @if (instructionOpenForId === entry.criterion_id && entry.instruction?.trim()) {
-                      <p class="criterion-instruction">{{ entry.instruction }}</p>
-                    }
                   }
                 </div>
               </div>
+
+              @if (instructionOpenForId === entry.criterion_id && entry.instruction?.trim()) {
+                <div class="criterion-instruction" [innerHTML]="safeInstruction(entry.instruction)"></div>
+              }
 
               @if (editingId === entry.criterion_id) {
                 <div class="edit-form">

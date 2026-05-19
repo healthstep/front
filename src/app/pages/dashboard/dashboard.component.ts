@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, inject, ElementRef, ViewChild, PLATFORM_ID, DestroyRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TuiButton, TuiLoader, TuiIcon, TuiTextfield, TuiInput, TuiLabel } from '@taiga-ui/core';
@@ -71,6 +72,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   private api = inject(ApiService);
   private platformId = inject(PLATFORM_ID);
   private destroyRef = inject(DestroyRef);
+  private sanitizer = inject(DomSanitizer);
 
   loading = true;
   loadingProgress = true;
@@ -433,6 +435,18 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
       return entry.value === '1' ? 'Да' : 'Нет';
     }
     return entry.value;
+  }
+
+  safeInstruction(text: string): SafeHtml {
+    const escaped = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    const linked = escaped.replace(
+      /(https?:\/\/[^\s<]+)/g,
+      '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>',
+    );
+    return this.sanitizer.bypassSecurityTrustHtml(linked.replace(/\n/g, '<br>'));
   }
 
   statusLabel(status: string): string {

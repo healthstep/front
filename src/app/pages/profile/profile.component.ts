@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { TuiButton, TuiLoader, TuiIcon, TuiTextfield, TuiInput, TuiLabel } from '@taiga-ui/core';
 import { TuiDay } from '@taiga-ui/cdk/date-time';
 import { TuiInputDate } from '@taiga-ui/kit/components/input-date';
@@ -29,6 +30,7 @@ import { AuthService } from '../../core/services/auth.service';
 export class ProfileComponent implements OnInit {
   private api = inject(ApiService);
   private auth = inject(AuthService);
+  private router = inject(Router);
 
   loading = true;
   saving = false;
@@ -159,8 +161,7 @@ export class ProfileComponent implements OnInit {
       next: () => {
         this.user.advanced = this.advanced;
         this.savingAdvanced = false;
-        this.advancedSaveSuccess = true;
-        setTimeout(() => (this.advancedSaveSuccess = false), 3000);
+        this.router.navigate(['/dashboard']);
       },
       error: () => {
         this.advanced = !this.advanced;

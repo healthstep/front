@@ -121,6 +121,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   /** Раскрытая инструкция по анализу для строки показателя (id критерия). */
   instructionOpenForId: string | null = null;
 
+  private instructionCache = new Map<string, SafeHtml>();
   private chartInstance: any = null;
   private chartFrame = 0;
 
@@ -438,6 +439,9 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   safeInstruction(text: string): SafeHtml {
+    if (this.instructionCache.has(text)) {
+      return this.instructionCache.get(text)!;
+    }
     const escaped = text
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -446,7 +450,9 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
       /(https?:\/\/[^\s<]+)/g,
       '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>',
     );
-    return this.sanitizer.bypassSecurityTrustHtml(linked.replace(/\n/g, '<br>'));
+    const result = this.sanitizer.bypassSecurityTrustHtml(linked.replace(/\n/g, '<br>'));
+    this.instructionCache.set(text, result);
+    return result;
   }
 
   statusLabel(status: string): string {

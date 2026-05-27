@@ -152,15 +152,14 @@ export class AdminComponent implements OnInit {
   typeLabel(type: string): string {
     const map: Record<string, string> = {
       reminder: 'Нет данных',
-      recommendation: 'Совет',
-      alarm: 'Тревога',
+      recommendation: 'Рекомендация',
       expiration_reminder: 'Срок',
     };
     return map[type] ?? type;
   }
 
   /** Значения для `select[tuiSelect]` (модель — id, подпись через `stringify`). */
-  readonly recTypeIds = ['reminder', 'recommendation', 'alarm', 'expiration_reminder'] as const;
+  readonly recTypeIds = ['reminder', 'recommendation', 'expiration_reminder'] as const;
   readonly inputTypeIds = ['numeric', 'check', 'boolean'] as const;
   readonly sexIds = ['', 'male', 'female'] as const;
 

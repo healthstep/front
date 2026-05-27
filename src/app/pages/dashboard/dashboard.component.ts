@@ -452,8 +452,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   statusLabel(status: string): string {
     const map: Record<string, string> = {
       ok: 'Норма',
-      warning: 'Внимание',
-      critical: 'Критично',
+      critical: 'Вне нормы',
       empty: 'Нет данных',
     };
     return map[status] || status;
@@ -462,7 +461,6 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   statusIcon(status: string): string {
     const map: Record<string, string> = {
       ok: '@tui.check-circle',
-      warning: '@tui.alert-circle',
       critical: '@tui.alert-triangle',
       empty: '@tui.circle',
     };
@@ -472,8 +470,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   recTypeLabel(type: string): string {
     const map: Record<string, string> = {
       reminder: 'Нет данных',
-      recommendation: 'Совет',
-      alarm: 'Тревога',
+      recommendation: 'Рекомендация',
       expiration_reminder: 'Срок истекает',
     };
     return map[type] || type;
@@ -483,7 +480,6 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     const map: Record<string, string> = {
       reminder: '@tui.bell',
       recommendation: '@tui.info',
-      alarm: '@tui.alert-triangle',
       expiration_reminder: '@tui.clock',
     };
     return map[type] || '@tui.info';
@@ -493,7 +489,6 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     const map: Record<string, string> = {
       reminder: '🔔',
       recommendation: '💡',
-      alarm: '⚠️',
       expiration_reminder: '⏰',
     };
     return map[type] || '💡';

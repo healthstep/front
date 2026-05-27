@@ -44,6 +44,7 @@ interface WeeklyItem {
   criterion_name: string;
   type: string;
   title: string;
+  text?: string;
   weight: number;
 }
 

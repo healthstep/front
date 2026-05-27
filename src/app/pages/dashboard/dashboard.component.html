@@ -364,6 +364,7 @@
         </div>
         <div class="weekly-body">
           <p class="weekly-title" [class.line-through]="item.weight === 0">{{ item.title }}</p>
+          <p class="weekly-text" *ngIf="item.text">{{ item.text }}</p>
           <p class="weekly-meta" *ngIf="item.criterion_name">
             🔬 {{ item.criterion_name }}
           </p>

@@ -207,7 +207,7 @@
                       <input
                         tuiInput
                         [(ngModel)]="editValue"
-                        type="number"
+                        inputmode="decimal"
                         (keyup.enter)="saveValue(entry)"
                         placeholder="Введите значение"
                       />
@@ -301,7 +301,7 @@
                   } @else {
                     <tui-textfield class="edit-textfield">
                       <label tuiLabel>Значение</label>
-                      <input tuiInput [(ngModel)]="editValue" type="number" (keyup.enter)="saveValue(entry)" placeholder="Значение" />
+                      <input tuiInput [(ngModel)]="editValue" inputmode="decimal" (keyup.enter)="saveValue(entry)" placeholder="Значение" />
                     </tui-textfield>
                   }
                   <tui-textfield class="edit-textfield">

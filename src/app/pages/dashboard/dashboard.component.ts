@@ -384,7 +384,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     const value =
       entry.input_type === 'check' || entry.input_type === 'boolean'
         ? String(this.editValue)
-        : String(this.editValue ?? '').trim();
+        : String(this.editValue ?? '').trim().replace(',', '.');
 
     this.savingCriterionId = entry.criterion_id;
     const measuredAt = this.editMeasuredAtDay?.toJSON();

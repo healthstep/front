@@ -92,11 +92,9 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   criteriaGroups: GroupWithEntries[] = [];
   ungroupedEntries: CriterionEntry[] = [];
 
-  editingId: string | null = null;
   editValue = '';
   /** Дата анализа для Taiga `tuiInputDate` (не нативный `type="date"`). */
   editMeasuredAtDay: TuiDay | null = null;
-  confirmEdit: string | null = null;
 
   /** Пол пользователя (для разбора PDF). */
   userSex = '';
@@ -316,34 +314,6 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  startEdit(entry: CriterionEntry): void {
-    if (entry.value && entry.value !== '') {
-      this.confirmEdit = entry.criterion_id;
-    } else {
-      this.openEdit(entry);
-    }
-  }
-
-  openEdit(entry: CriterionEntry): void {
-    this.criterionSaveError = null;
-    this.confirmEdit = null;
-    this.editingId = entry.criterion_id;
-    this.editValue = entry.value || '';
-    this.editMeasuredAtDay = TuiDay.currentLocal();
-  }
-
-  cancelConfirm(): void {
-    this.confirmEdit = null;
-  }
-
-  cancelEdit(): void {
-    this.criterionSaveError = null;
-    this.editingId = null;
-    this.editValue = '';
-    this.editMeasuredAtDay = null;
-    this.confirmEdit = null;
-  }
-
   /**
    * Кнопка «Сохранить»: нельзя использовать `!editValue` — для чисел значение 0 валидно, но `!0 === true`.
    */
@@ -392,7 +362,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
       next: () => {
         this.savingCriterionId = null;
         entry.value = value;
-        this.cancelEdit();
+        this.closeInfo();
         this.refreshAfterCriterionSave();
       },
       error: (e: { error?: { message?: string } }) => {
@@ -404,24 +374,24 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   openInfo(entry: CriterionEntry): void {
     this.infoEntry = entry;
+    this.criterionSaveError = null;
+    this.editValue = entry.value || '';
+    this.editMeasuredAtDay = TuiDay.currentLocal();
   }
 
   closeInfo(): void {
     this.infoEntry = null;
+    this.criterionSaveError = null;
+    this.editValue = '';
+    this.editMeasuredAtDay = null;
   }
 
   goToAndEdit(criterionId: string): void {
     this.activeTab = 'criteria';
-    this.cancelEdit();
+    this.closeInfo();
     setTimeout(() => {
-      const el = document.getElementById(`crit-${criterionId}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        el.classList.add('row-highlight');
-        setTimeout(() => el.classList.remove('row-highlight'), 2500);
-      }
       const entry = this.criteriaEntries.find(e => e.criterion_id === criterionId);
-      if (entry) this.startEdit(entry);
+      if (entry) this.openInfo(entry);
     }, 150);
   }
 

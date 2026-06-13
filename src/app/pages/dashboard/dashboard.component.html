@@ -1,4 +1,38 @@
 <app-nav />
+
+<!-- Status icons: empty / out-of-range / ok / expiring -->
+<ng-template #statusIcon let-status>
+  @switch (status) {
+    @case ('ok') {
+      <svg class="stat-svg" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" fill="#16a34a" />
+        <path d="M7 12.4l3.2 3.2L17 8.6" fill="none" stroke="#fff" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    }
+    @case ('critical') {
+      <svg class="stat-svg" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3.3l9.4 16.3a1 1 0 0 1-.87 1.5H3.47a1 1 0 0 1-.87-1.5z" fill="#dc2626" />
+        <rect x="11" y="9" width="2" height="5.6" rx="1" fill="#fff" />
+        <circle cx="12" cy="17.2" r="1.2" fill="#fff" />
+      </svg>
+    }
+    @case ('expiring') {
+      <svg class="stat-svg" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" fill="#f59e0b" />
+        <path d="M12 6.7v5.5l3.4 2" fill="none" stroke="#fff" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    }
+    @default {
+      <svg class="stat-svg" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="3.3 3.3" />
+        <line x1="8.4" y1="12" x2="15.6" y2="12" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    }
+  }
+</ng-template>
+
 <div class="page">
 
   <!-- Progress Summary -->
@@ -133,116 +167,22 @@
         </h3>
         <div class="criteria-list">
           @for (entry of gw.entries; track entry.criterion_id) {
-            <div [id]="'crit-' + entry.criterion_id" class="criterion-item" [class]="'row-' + entry.status">
-              <div class="criterion-main">
-                <div class="criterion-name-cell">
-                  <span class="level-dot" [class]="'lvl-' + entry.level"></span>
-                  <span class="criterion-name">{{ entry.criterion_name }}</span>
-                </div>
-                <div class="criterion-value-area">
-                  @if (confirmEdit === entry.criterion_id) {
-                    <div class="confirm-box">
-                      <p class="confirm-text">
-                        Значение уже заполнено. Изменяйте только при наличии свежих данных анализа.
-                      </p>
-                      <div class="confirm-actions">
-                        <button tuiButton size="xs" appearance="primary" (click)="openEdit(entry)">Изменить</button>
-                        <button tuiButton size="xs" appearance="ghost" (click)="cancelConfirm()">Отмена</button>
-                      </div>
-                    </div>
-                  } @else if (editingId !== entry.criterion_id) {
-                    <div class="value-row">
-                      <span class="value-text" *ngIf="entry.value">{{ formatValue(entry) }}</span>
-                      <span class="no-value" *ngIf="!entry.value">—</span>
-                      @if (entry.description?.trim() || entry.instruction?.trim()) {
-                        <button
-                          tuiButton
-                          size="xs"
-                          appearance="flat"
-                          type="button"
-                          (click)="openInfo(entry)"
-                          class="instruction-toggle-btn"
-                        >
-                          ℹ️ Подробнее
-                        </button>
-                      }
-                      <button tuiButton size="xs" appearance="ghost" (click)="startEdit(entry)" class="edit-btn">
-                        ✏️
-                      </button>
-                    </div>
-                  }
-                </div>
-              </div>
-
-              @if (entry.recommendation?.trim()) {
-                <p class="criterion-rec" [class]="'rec-' + entry.status">{{ entry.recommendation }}</p>
-              }
-
-              @if (editingId === entry.criterion_id) {
-                <div class="edit-form">
-                  <div class="edit-form-label">
-                    <strong>{{ entry.criterion_name }}</strong>
-                  </div>
-
-                  @if (entry.input_type === 'boolean' || entry.input_type === 'check') {
-                    <div class="bool-choice">
-                      <button
-                        type="button"
-                        tuiButton
-                        size="s"
-                        [appearance]="editValue === '1' ? 'primary' : 'outline'"
-                        (click)="editValue = '1'"
-                      >Да</button>
-                      <button
-                        type="button"
-                        tuiButton
-                        size="s"
-                        [appearance]="editValue === '0' ? 'primary' : 'outline'"
-                        (click)="editValue = '0'"
-                      >Нет</button>
-                    </div>
-                  } @else {
-                    <tui-textfield class="edit-textfield">
-                      <label tuiLabel>Значение</label>
-                      <input
-                        tuiInput
-                        [(ngModel)]="editValue"
-                        inputmode="decimal"
-                        (keyup.enter)="saveValue(entry)"
-                        placeholder="Введите значение"
-                      />
-                    </tui-textfield>
-                  }
-
-                  <tui-textfield class="edit-textfield">
-                    <label tuiLabel>Дата анализа</label>
-                    <input tuiInputDate [(ngModel)]="editMeasuredAtDay" [max]="maxAnalysisDay" />
-                  </tui-textfield>
-
-                  @if (criterionSaveError) {
-                    <p class="error edit-error">{{ criterionSaveError }}</p>
-                  }
-
-                  <div class="edit-actions">
-                    <button
-                      tuiButton
-                      size="s"
-                      appearance="primary"
-                      [disabled]="savingCriterionId === entry.criterion_id || !canSaveEdit(entry)"
-                      (click)="saveValue(entry)"
-                    >
-                      @if (savingCriterionId === entry.criterion_id) {
-                        <tui-loader size="xs" />
-                      } @else {
-                        Сохранить
-                      }
-                    </button>
-                    <button tuiButton size="s" appearance="ghost" (click)="cancelEdit()">
-                      Отмена
-                    </button>
-                  </div>
-                </div>
-              }
+            <div
+              [id]="'crit-' + entry.criterion_id"
+              class="criterion-item"
+              role="button"
+              tabindex="0"
+              (click)="openInfo(entry)"
+              (keydown.enter)="openInfo(entry)"
+              (keydown.space)="openInfo(entry); $event.preventDefault()"
+            >
+              <span class="status-icon">
+                <ng-container *ngTemplateOutlet="statusIcon; context: { $implicit: entry.status }"></ng-container>
+              </span>
+              <span class="criterion-name">{{ entry.criterion_name }}</span>
+              <span class="criterion-value" *ngIf="entry.value">{{ formatValue(entry) }}</span>
+              <span class="criterion-value no-value" *ngIf="!entry.value">—</span>
+              <span class="chevron" aria-hidden="true">›</span>
             </div>
           }
         </div>
@@ -257,68 +197,22 @@
         </h3>
         <div class="criteria-list">
           @for (entry of ungroupedEntries; track entry.criterion_id) {
-            <div [id]="'crit-' + entry.criterion_id" class="criterion-item" [class]="'row-' + entry.status">
-              <div class="criterion-main">
-                <div class="criterion-name-cell">
-                  <span class="criterion-name">{{ entry.criterion_name }}</span>
-                </div>
-                <div class="criterion-value-area">
-                  @if (confirmEdit === entry.criterion_id) {
-                    <div class="confirm-box">
-                      <p class="confirm-text">Значение уже заполнено. Изменяйте только при наличии свежих данных.</p>
-                      <div class="confirm-actions">
-                        <button tuiButton size="xs" appearance="primary" (click)="openEdit(entry)">Изменить</button>
-                        <button tuiButton size="xs" appearance="ghost" (click)="cancelConfirm()">Отмена</button>
-                      </div>
-                    </div>
-                  } @else if (editingId !== entry.criterion_id) {
-                    <div class="value-row">
-                      <span class="value-text" *ngIf="entry.value">{{ formatValue(entry) }}</span>
-                      <span class="no-value" *ngIf="!entry.value">—</span>
-                      @if (entry.description?.trim() || entry.instruction?.trim()) {
-                        <button tuiButton size="xs" appearance="flat" type="button" (click)="openInfo(entry)" class="instruction-toggle-btn">
-                          ℹ️ Подробнее
-                        </button>
-                      }
-                      <button tuiButton size="xs" appearance="ghost" (click)="startEdit(entry)" class="edit-btn">✏️</button>
-                    </div>
-                  }
-                </div>
-              </div>
-
-              @if (entry.recommendation?.trim()) {
-                <p class="criterion-rec" [class]="'rec-' + entry.status">{{ entry.recommendation }}</p>
-              }
-
-              @if (editingId === entry.criterion_id) {
-                <div class="edit-form">
-                  <div class="edit-form-label"><strong>{{ entry.criterion_name }}</strong></div>
-                  @if (entry.input_type === 'boolean' || entry.input_type === 'check') {
-                    <div class="bool-choice">
-                      <button type="button" tuiButton size="s" [appearance]="editValue === '1' ? 'primary' : 'outline'" (click)="editValue = '1'">Да</button>
-                      <button type="button" tuiButton size="s" [appearance]="editValue === '0' ? 'primary' : 'outline'" (click)="editValue = '0'">Нет</button>
-                    </div>
-                  } @else {
-                    <tui-textfield class="edit-textfield">
-                      <label tuiLabel>Значение</label>
-                      <input tuiInput [(ngModel)]="editValue" inputmode="decimal" (keyup.enter)="saveValue(entry)" placeholder="Значение" />
-                    </tui-textfield>
-                  }
-                  <tui-textfield class="edit-textfield">
-                    <label tuiLabel>Дата анализа</label>
-                    <input tuiInputDate [(ngModel)]="editMeasuredAtDay" [max]="maxAnalysisDay" />
-                  </tui-textfield>
-                  @if (criterionSaveError) {
-                    <p class="error edit-error">{{ criterionSaveError }}</p>
-                  }
-                  <div class="edit-actions">
-                    <button tuiButton size="s" appearance="primary" [disabled]="savingCriterionId === entry.criterion_id || !canSaveEdit(entry)" (click)="saveValue(entry)">
-                      @if (savingCriterionId === entry.criterion_id) { <tui-loader size="xs" /> } @else { Сохранить }
-                    </button>
-                    <button tuiButton size="s" appearance="ghost" (click)="cancelEdit()">Отмена</button>
-                  </div>
-                </div>
-              }
+            <div
+              [id]="'crit-' + entry.criterion_id"
+              class="criterion-item"
+              role="button"
+              tabindex="0"
+              (click)="openInfo(entry)"
+              (keydown.enter)="openInfo(entry)"
+              (keydown.space)="openInfo(entry); $event.preventDefault()"
+            >
+              <span class="status-icon">
+                <ng-container *ngTemplateOutlet="statusIcon; context: { $implicit: entry.status }"></ng-container>
+              </span>
+              <span class="criterion-name">{{ entry.criterion_name }}</span>
+              <span class="criterion-value" *ngIf="entry.value">{{ formatValue(entry) }}</span>
+              <span class="criterion-value no-value" *ngIf="!entry.value">—</span>
+              <span class="chevron" aria-hidden="true">›</span>
             </div>
           }
         </div>
@@ -387,13 +281,16 @@
   <div class="info-overlay" (click)="closeInfo()">
     <div class="info-modal" (click)="$event.stopPropagation()">
       <div class="info-modal-head">
+        <span class="status-icon">
+          <ng-container *ngTemplateOutlet="statusIcon; context: { $implicit: infoEntry.status }"></ng-container>
+        </span>
         <h3 class="info-modal-title">{{ infoEntry.criterion_name }}</h3>
         <button type="button" class="info-close" (click)="closeInfo()" aria-label="Закрыть">✕</button>
       </div>
 
       <div class="info-modal-body">
         @if (infoEntry.value) {
-          <div class="info-current" [class]="'row-' + infoEntry.status">
+          <div class="info-current">
             <span class="info-current-label">Ваше значение</span>
             <span class="info-current-value">{{ formatValue(infoEntry) }}</span>
           </div>
@@ -416,6 +313,54 @@
             <div class="criterion-instruction" [innerHTML]="safeInstruction(infoEntry.instruction ?? '')"></div>
           </div>
         }
+
+        <div class="info-section info-edit">
+          <h4 class="info-section-title">{{ infoEntry.value ? 'Обновить значение' : 'Внести значение' }}</h4>
+
+          @if (infoEntry.input_type === 'boolean' || infoEntry.input_type === 'check') {
+            <div class="bool-choice">
+              <button type="button" tuiButton size="s" [appearance]="editValue === '1' ? 'primary' : 'outline'" (click)="editValue = '1'">Да</button>
+              <button type="button" tuiButton size="s" [appearance]="editValue === '0' ? 'primary' : 'outline'" (click)="editValue = '0'">Нет</button>
+            </div>
+          } @else {
+            <tui-textfield class="edit-textfield">
+              <label tuiLabel>Значение</label>
+              <input
+                tuiInput
+                [(ngModel)]="editValue"
+                inputmode="decimal"
+                (keyup.enter)="saveValue(infoEntry)"
+                placeholder="Введите значение"
+              />
+            </tui-textfield>
+          }
+
+          <tui-textfield class="edit-textfield">
+            <label tuiLabel>Дата анализа</label>
+            <input tuiInputDate [(ngModel)]="editMeasuredAtDay" [max]="maxAnalysisDay" />
+          </tui-textfield>
+
+          @if (criterionSaveError) {
+            <p class="error edit-error">{{ criterionSaveError }}</p>
+          }
+
+          <div class="edit-actions">
+            <button
+              tuiButton
+              size="s"
+              appearance="primary"
+              [disabled]="savingCriterionId === infoEntry.criterion_id || !canSaveEdit(infoEntry)"
+              (click)="saveValue(infoEntry)"
+            >
+              @if (savingCriterionId === infoEntry.criterion_id) {
+                <tui-loader size="xs" />
+              } @else {
+                Сохранить
+              }
+            </button>
+            <button tuiButton size="s" appearance="ghost" (click)="closeInfo()">Закрыть</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

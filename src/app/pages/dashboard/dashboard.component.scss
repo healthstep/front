@@ -221,22 +221,26 @@
   gap: 0;
 }
 
+/* Whole row is a button. Uniform background; status shown by the icon. */
 .criterion-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.75rem 0.5rem;
+  background: #fff;
+  border: none;
   border-bottom: 1px solid #f3f4f6;
-  padding: 0.625rem 0;
+  border-radius: 0.5rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
 
   &:last-child { border-bottom: none; }
-  &.row-critical { background: #fff5f5; border-radius: 0.5rem; padding: 0.625rem 0.5rem; margin-bottom: 2px; }
-  &.row-ok { background: #f0fdf4; border-radius: 0.5rem; padding: 0.625rem 0.5rem; margin-bottom: 2px; }
-
-  // Filled & in-range → green value; out of range → red value.
-  &.row-ok .value-text { color: #16a34a; font-weight: 600; }
-  &.row-critical .value-text { color: #dc2626; font-weight: 600; }
-
-  &.row-highlight {
-    animation: highlight-pulse 2.5s ease-out forwards;
-    border-radius: 0.5rem;
-  }
+  &:hover { background: #f9fafb; }
+  &:active { background: #f3f4f6; }
+  &:focus-visible { outline: 2px solid var(--zosh-primary); outline-offset: -2px; }
+  &.row-highlight { animation: highlight-pulse 2.5s ease-out forwards; }
 }
 
 @keyframes highlight-pulse {
@@ -245,82 +249,57 @@
   100% { background: transparent; }
 }
 
-.criterion-main {
-  display: flex;
-  justify-content: space-between;
+.status-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
+  justify-content: center;
 }
-
-.criterion-name-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1;
-  min-width: 0;
-}
+.stat-svg { width: 22px; height: 22px; display: block; }
 
 .criterion-name {
-  font-size: 0.875rem;
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
   font-weight: 500;
+  line-height: 1.35;
   color: #111827;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.level-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+.criterion-value {
   flex-shrink: 0;
-}
-.lvl-1 { background: #22c55e; }
-.lvl-2 { background: var(--zosh-primary); }
-.lvl-3 { background: #a855f7; }
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
 
-// Per-criterion recommendation (actionable nudge). Compact colored line.
+  &.no-value { color: #cbd5e1; font-weight: 500; }
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: #d1d5db;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+// Per-criterion recommendation (shown inside the modal). Compact colored line.
 .criterion-rec {
-  font-size: 0.78rem;
-  line-height: 1.4;
-  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin: 0 0 0.875rem;
   padding-left: 0.6rem;
   border-left: 3px solid #d1d5db;
   color: #4b5563;
 }
 .criterion-rec.rec-critical { border-left-color: #ef4444; color: #b91c1c; }
 .criterion-rec.rec-empty { border-left-color: #f59e0b; color: #b45309; }
-.criterion-rec.rec-ok { border-left-color: #f59e0b; color: #92400e; }
-
-// "Зачем?" — why this criterion matters (+ border values).
-.criterion-desc {
-  font-size: 0.8rem;
-  line-height: 1.5;
-  margin: 0.4rem 0 0;
-  padding: 0.5rem 0.625rem;
-  background: #f9fafb;
-  border-radius: 0.5rem;
-  color: #374151;
-}
-
-.criterion-value-area {
-  flex-shrink: 0;
-}
-
-.value-row {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  flex-wrap: wrap;
-}
-
-.instruction-toggle-btn {
-  margin-left: 0.125rem;
-}
+.criterion-rec.rec-expiring { border-left-color: #f59e0b; color: #b45309; }
+.criterion-rec.rec-ok { border-left-color: #16a34a; color: #15803d; }
 
 .criterion-instruction {
-  margin: 0.5rem 0 0;
+  margin: 0;
   padding: 0.65rem 0.75rem;
   background: #f8fafc;
   border-radius: 0.5rem;
@@ -337,16 +316,6 @@
     word-break: break-all;
   }
 }
-
-.value-text { color: #111827; font-weight: 600; font-size: 0.875rem; }
-.no-value { color: #d1d5db; font-size: 0.875rem; }
-
-.edit-btn {
-  opacity: 0.6;
-  font-size: 0.85rem;
-  transition: opacity 0.15s;
-}
-.criterion-item:hover .edit-btn { opacity: 1; }
 
 /* Confirm box */
 .confirm-box {
@@ -623,6 +592,8 @@
 }
 
 .info-modal-title {
+  flex: 1;
+  min-width: 0;
   margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
@@ -655,15 +626,16 @@
   background: #f9fafb;
   margin-bottom: 0.875rem;
 }
-.info-current.row-ok { background: #f0fdf4; }
-.info-current.row-critical { background: #fff5f5; }
 .info-current-label { font-size: 0.85rem; color: #6b7280; }
 .info-current-value { font-size: 1.4rem; font-weight: 700; color: #111827; }
-.info-current.row-ok .info-current-value { color: #16a34a; }
-.info-current.row-critical .info-current-value { color: #dc2626; }
 
 .info-section { margin-top: 1rem; }
 .info-section:first-child { margin-top: 0; }
+.info-edit {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #f3f4f6;
+}
 .info-section-title {
   margin: 0 0 0.4rem;
   font-size: 0.8rem;

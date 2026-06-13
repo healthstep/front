@@ -120,11 +120,8 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   /** Сообщение об ошибке при сохранении показателя (см. saveValue). */
   criterionSaveError: string | null = null;
 
-  /** Раскрытая инструкция по анализу для строки показателя (id критерия). */
-  instructionOpenForId: string | null = null;
-
-  /** Раскрытое описание показателя (id критерия). */
-  descOpenForId: string | null = null;
+  /** Критерий, для которого открыто модальное окно с описанием и инструкцией. */
+  infoEntry: CriterionEntry | null = null;
 
   private instructionCache = new Map<string, SafeHtml>();
   private chartInstance: any = null;
@@ -405,18 +402,12 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  toggleInstruction(entry: CriterionEntry): void {
-    const t = (entry.instruction || '').trim();
-    if (!t) return;
-    this.instructionOpenForId =
-      this.instructionOpenForId === entry.criterion_id ? null : entry.criterion_id;
+  openInfo(entry: CriterionEntry): void {
+    this.infoEntry = entry;
   }
 
-  toggleDesc(entry: CriterionEntry): void {
-    const t = (entry.description || '').trim();
-    if (!t) return;
-    this.descOpenForId =
-      this.descOpenForId === entry.criterion_id ? null : entry.criterion_id;
+  closeInfo(): void {
+    this.infoEntry = null;
   }
 
   goToAndEdit(criterionId: string): void {

@@ -154,28 +154,16 @@
                     <div class="value-row">
                       <span class="value-text" *ngIf="entry.value">{{ formatValue(entry) }}</span>
                       <span class="no-value" *ngIf="!entry.value">—</span>
-                      @if (entry.instruction?.trim()) {
+                      @if (entry.description?.trim() || entry.instruction?.trim()) {
                         <button
                           tuiButton
                           size="xs"
                           appearance="flat"
                           type="button"
-                          (click)="toggleInstruction(entry)"
+                          (click)="openInfo(entry)"
                           class="instruction-toggle-btn"
                         >
-                          {{ instructionOpenForId === entry.criterion_id ? 'Скрыть' : 'Инструкция' }}
-                        </button>
-                      }
-                      @if (entry.description?.trim()) {
-                        <button
-                          tuiButton
-                          size="xs"
-                          appearance="flat"
-                          type="button"
-                          (click)="toggleDesc(entry)"
-                          class="instruction-toggle-btn"
-                        >
-                          {{ descOpenForId === entry.criterion_id ? 'Скрыть' : 'Зачем?' }}
+                          ℹ️ Подробнее
                         </button>
                       }
                       <button tuiButton size="xs" appearance="ghost" (click)="startEdit(entry)" class="edit-btn">
@@ -188,14 +176,6 @@
 
               @if (entry.recommendation?.trim()) {
                 <p class="criterion-rec" [class]="'rec-' + entry.status">{{ entry.recommendation }}</p>
-              }
-
-              @if (descOpenForId === entry.criterion_id && entry.description?.trim()) {
-                <div class="criterion-desc">{{ entry.description }}</div>
-              }
-
-              @if (instructionOpenForId === entry.criterion_id && entry.instruction?.trim()) {
-                <div class="criterion-instruction" [innerHTML]="safeInstruction(entry.instruction ?? '')"></div>
               }
 
               @if (editingId === entry.criterion_id) {
@@ -295,21 +275,9 @@
                     <div class="value-row">
                       <span class="value-text" *ngIf="entry.value">{{ formatValue(entry) }}</span>
                       <span class="no-value" *ngIf="!entry.value">—</span>
-                      @if (entry.instruction?.trim()) {
-                        <button
-                          tuiButton
-                          size="xs"
-                          appearance="flat"
-                          type="button"
-                          (click)="toggleInstruction(entry)"
-                          class="instruction-toggle-btn"
-                        >
-                          {{ instructionOpenForId === entry.criterion_id ? 'Скрыть' : 'Инструкция' }}
-                        </button>
-                      }
-                      @if (entry.description?.trim()) {
-                        <button tuiButton size="xs" appearance="flat" type="button" (click)="toggleDesc(entry)" class="instruction-toggle-btn">
-                          {{ descOpenForId === entry.criterion_id ? 'Скрыть' : 'Зачем?' }}
+                      @if (entry.description?.trim() || entry.instruction?.trim()) {
+                        <button tuiButton size="xs" appearance="flat" type="button" (click)="openInfo(entry)" class="instruction-toggle-btn">
+                          ℹ️ Подробнее
                         </button>
                       }
                       <button tuiButton size="xs" appearance="ghost" (click)="startEdit(entry)" class="edit-btn">✏️</button>
@@ -320,14 +288,6 @@
 
               @if (entry.recommendation?.trim()) {
                 <p class="criterion-rec" [class]="'rec-' + entry.status">{{ entry.recommendation }}</p>
-              }
-
-              @if (descOpenForId === entry.criterion_id && entry.description?.trim()) {
-                <div class="criterion-desc">{{ entry.description }}</div>
-              }
-
-              @if (instructionOpenForId === entry.criterion_id && entry.instruction?.trim()) {
-                <div class="criterion-instruction" [innerHTML]="safeInstruction(entry.instruction ?? '')"></div>
               }
 
               @if (editingId === entry.criterion_id) {
@@ -422,3 +382,41 @@
     </div>
   </section>
 </div>
+
+@if (infoEntry) {
+  <div class="info-overlay" (click)="closeInfo()">
+    <div class="info-modal" (click)="$event.stopPropagation()">
+      <div class="info-modal-head">
+        <h3 class="info-modal-title">{{ infoEntry.criterion_name }}</h3>
+        <button type="button" class="info-close" (click)="closeInfo()" aria-label="Закрыть">✕</button>
+      </div>
+
+      <div class="info-modal-body">
+        @if (infoEntry.value) {
+          <div class="info-current" [class]="'row-' + infoEntry.status">
+            <span class="info-current-label">Ваше значение</span>
+            <span class="info-current-value">{{ formatValue(infoEntry) }}</span>
+          </div>
+        }
+
+        @if (infoEntry.recommendation?.trim()) {
+          <p class="criterion-rec" [class]="'rec-' + infoEntry.status">{{ infoEntry.recommendation }}</p>
+        }
+
+        @if (infoEntry.description?.trim()) {
+          <div class="info-section">
+            <h4 class="info-section-title">Зачем нужен</h4>
+            <p class="info-section-text">{{ infoEntry.description }}</p>
+          </div>
+        }
+
+        @if (infoEntry.instruction?.trim()) {
+          <div class="info-section">
+            <h4 class="info-section-title">Как сдать</h4>
+            <div class="criterion-instruction" [innerHTML]="safeInstruction(infoEntry.instruction ?? '')"></div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

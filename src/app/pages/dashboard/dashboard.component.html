@@ -186,7 +186,7 @@
                 </div>
               </div>
 
-              @if (entry.recommendation.trim()) {
+              @if (entry.recommendation?.trim()) {
                 <p class="criterion-rec" [class]="'rec-' + entry.status">{{ entry.recommendation }}</p>
               }
 
@@ -318,7 +318,7 @@
                 </div>
               </div>
 
-              @if (entry.recommendation.trim()) {
+              @if (entry.recommendation?.trim()) {
                 <p class="criterion-rec" [class]="'rec-' + entry.status">{{ entry.recommendation }}</p>
               }
 

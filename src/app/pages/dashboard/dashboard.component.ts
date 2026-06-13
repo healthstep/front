@@ -18,7 +18,7 @@ interface CriterionEntry {
   group_id: string;
   value: string;
   status: string;
-  recommendation: string;
+  recommendation?: string;
   description?: string;
   level: number;
   severity: string;

@@ -166,6 +166,18 @@
                           {{ instructionOpenForId === entry.criterion_id ? 'Скрыть' : 'Инструкция' }}
                         </button>
                       }
+                      @if (entry.description?.trim()) {
+                        <button
+                          tuiButton
+                          size="xs"
+                          appearance="flat"
+                          type="button"
+                          (click)="toggleDesc(entry)"
+                          class="instruction-toggle-btn"
+                        >
+                          {{ descOpenForId === entry.criterion_id ? 'Скрыть' : 'Зачем?' }}
+                        </button>
+                      }
                       <button tuiButton size="xs" appearance="ghost" (click)="startEdit(entry)" class="edit-btn">
                         ✏️
                       </button>
@@ -173,6 +185,14 @@
                   }
                 </div>
               </div>
+
+              @if (entry.recommendation.trim()) {
+                <p class="criterion-rec" [class]="'rec-' + entry.status">{{ entry.recommendation }}</p>
+              }
+
+              @if (descOpenForId === entry.criterion_id && entry.description?.trim()) {
+                <div class="criterion-desc">{{ entry.description }}</div>
+              }
 
               @if (instructionOpenForId === entry.criterion_id && entry.instruction?.trim()) {
                 <div class="criterion-instruction" [innerHTML]="safeInstruction(entry.instruction ?? '')"></div>
@@ -287,11 +307,24 @@
                           {{ instructionOpenForId === entry.criterion_id ? 'Скрыть' : 'Инструкция' }}
                         </button>
                       }
+                      @if (entry.description?.trim()) {
+                        <button tuiButton size="xs" appearance="flat" type="button" (click)="toggleDesc(entry)" class="instruction-toggle-btn">
+                          {{ descOpenForId === entry.criterion_id ? 'Скрыть' : 'Зачем?' }}
+                        </button>
+                      }
                       <button tuiButton size="xs" appearance="ghost" (click)="startEdit(entry)" class="edit-btn">✏️</button>
                     </div>
                   }
                 </div>
               </div>
+
+              @if (entry.recommendation.trim()) {
+                <p class="criterion-rec" [class]="'rec-' + entry.status">{{ entry.recommendation }}</p>
+              }
+
+              @if (descOpenForId === entry.criterion_id && entry.description?.trim()) {
+                <div class="criterion-desc">{{ entry.description }}</div>
+              }
 
               @if (instructionOpenForId === entry.criterion_id && entry.instruction?.trim()) {
                 <div class="criterion-instruction" [innerHTML]="safeInstruction(entry.instruction ?? '')"></div>

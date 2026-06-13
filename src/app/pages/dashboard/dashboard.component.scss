@@ -227,6 +227,11 @@
 
   &:last-child { border-bottom: none; }
   &.row-critical { background: #fff5f5; border-radius: 0.5rem; padding: 0.625rem 0.5rem; margin-bottom: 2px; }
+  &.row-ok { background: #f0fdf4; border-radius: 0.5rem; padding: 0.625rem 0.5rem; margin-bottom: 2px; }
+
+  // Filled & in-range → green value; out of range → red value.
+  &.row-ok .value-text { color: #16a34a; font-weight: 600; }
+  &.row-critical .value-text { color: #dc2626; font-weight: 600; }
 
   &.row-highlight {
     animation: highlight-pulse 2.5s ease-out forwards;
@@ -274,6 +279,30 @@
 .lvl-1 { background: #22c55e; }
 .lvl-2 { background: var(--zosh-primary); }
 .lvl-3 { background: #a855f7; }
+
+// Per-criterion recommendation (actionable nudge). Compact colored line.
+.criterion-rec {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  margin: 0.4rem 0 0;
+  padding-left: 0.6rem;
+  border-left: 3px solid #d1d5db;
+  color: #4b5563;
+}
+.criterion-rec.rec-critical { border-left-color: #ef4444; color: #b91c1c; }
+.criterion-rec.rec-empty { border-left-color: #f59e0b; color: #b45309; }
+.criterion-rec.rec-ok { border-left-color: #f59e0b; color: #92400e; }
+
+// "Зачем?" — why this criterion matters (+ border values).
+.criterion-desc {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin: 0.4rem 0 0;
+  padding: 0.5rem 0.625rem;
+  background: #f9fafb;
+  border-radius: 0.5rem;
+  color: #374151;
+}
 
 .criterion-value-area {
   flex-shrink: 0;

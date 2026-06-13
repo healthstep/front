@@ -19,6 +19,7 @@ interface CriterionEntry {
   value: string;
   status: string;
   recommendation: string;
+  description?: string;
   level: number;
   severity: string;
   input_type: string;
@@ -121,6 +122,9 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   /** Раскрытая инструкция по анализу для строки показателя (id критерия). */
   instructionOpenForId: string | null = null;
+
+  /** Раскрытое описание показателя (id критерия). */
+  descOpenForId: string | null = null;
 
   private instructionCache = new Map<string, SafeHtml>();
   private chartInstance: any = null;
@@ -406,6 +410,13 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!t) return;
     this.instructionOpenForId =
       this.instructionOpenForId === entry.criterion_id ? null : entry.criterion_id;
+  }
+
+  toggleDesc(entry: CriterionEntry): void {
+    const t = (entry.description || '').trim();
+    if (!t) return;
+    this.descOpenForId =
+      this.descOpenForId === entry.criterion_id ? null : entry.criterion_id;
   }
 
   goToAndEdit(criterionId: string): void {

@@ -335,10 +335,10 @@
             </tui-textfield>
           }
 
-          <tui-textfield class="edit-textfield">
-            <label tuiLabel>Дата анализа</label>
-            <input tuiInputDate [(ngModel)]="editMeasuredAtDay" [max]="maxAnalysisDay" />
-          </tui-textfield>
+          <label class="date-field">
+            <span class="date-field-label">Дата анализа</span>
+            <input type="date" class="date-native" [(ngModel)]="editMeasuredAtStr" [max]="maxAnalysisDate" />
+          </label>
 
           @if (criterionSaveError) {
             <p class="error edit-error">{{ criterionSaveError }}</p>

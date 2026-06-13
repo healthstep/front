@@ -4,13 +4,19 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TuiButton, TuiLoader, TuiIcon, TuiTextfield, TuiInput, TuiLabel } from '@taiga-ui/core';
-import { TuiDay } from '@taiga-ui/cdk/date-time';
-import { TuiInputDate } from '@taiga-ui/kit/components/input-date';
 import { TuiFiles, tuiFilesAccepted, type TuiFileLike } from '@taiga-ui/kit/components/files';
 import { filter, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { NavComponent } from '../../shared/nav/nav.component';
 import { ApiService } from '../../core/services/api.service';
+
+/** Today as "YYYY-MM-DD" (local), for native date inputs. */
+function todayISO(): string {
+  const d = new Date();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+}
 
 interface CriterionEntry {
   criterion_id: string;
@@ -59,7 +65,6 @@ interface WeeklyItem {
     TuiTextfield,
     TuiInput,
     TuiLabel,
-    ...TuiInputDate,
     ...TuiFiles,
     NavComponent,
     FormsModule,
@@ -93,8 +98,8 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   ungroupedEntries: CriterionEntry[] = [];
 
   editValue = '';
-  /** Дата анализа для Taiga `tuiInputDate` (не нативный `type="date"`). */
-  editMeasuredAtDay: TuiDay | null = null;
+  /** Дата анализа ("YYYY-MM-DD") для нативного `<input type="date">`. */
+  editMeasuredAtStr = '';
 
   /** Пол пользователя (для разбора PDF). */
   userSex = '';
@@ -109,11 +114,8 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   labNote = '';
   labSaveSuccess = false;
 
-  /**
-   * Верхняя граница даты анализа (текущий день). Стабильная ссылка — не геттер:
-   * иначе [max] на tuiInputDate даёт новый TuiDay на каждом change detection и вешает UI.
-   */
-  maxAnalysisDay: TuiDay = TuiDay.currentLocal();
+  /** Верхняя граница даты анализа (сегодня), чтобы нельзя было выбрать будущее. */
+  maxAnalysisDate = todayISO();
 
   /** Сообщение об ошибке при сохранении показателя (см. saveValue). */
   criterionSaveError: string | null = null;
@@ -127,9 +129,6 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnInit(): void {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    if (this.isBrowser) {
-      this.maxAnalysisDay = TuiDay.currentLocal();
-    }
     this.labFileControl.valueChanges
       .pipe(
         takeUntilDestroyed(this.destroyRef),
@@ -357,8 +356,8 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         : String(this.editValue ?? '').trim().replace(',', '.');
 
     this.savingCriterionId = entry.criterion_id;
-    const measuredAt = this.editMeasuredAtDay?.toJSON();
-    this.api.setUserCriterion(entry.criterion_id, value, measuredAt || undefined).subscribe({
+    const measuredAt = this.editMeasuredAtStr || undefined;
+    this.api.setUserCriterion(entry.criterion_id, value, measuredAt).subscribe({
       next: () => {
         this.savingCriterionId = null;
         entry.value = value;
@@ -376,14 +375,14 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.infoEntry = entry;
     this.criterionSaveError = null;
     this.editValue = entry.value || '';
-    this.editMeasuredAtDay = TuiDay.currentLocal();
+    this.editMeasuredAtStr = todayISO();
   }
 
   closeInfo(): void {
     this.infoEntry = null;
     this.criterionSaveError = null;
     this.editValue = '';
-    this.editMeasuredAtDay = null;
+    this.editMeasuredAtStr = '';
   }
 
   goToAndEdit(criterionId: string): void {

@@ -652,3 +652,39 @@
 }
 
 .info-modal-body .criterion-rec { margin: 0 0 0.875rem; }
+
+/* Native date input (reliable calendar popup, no portal/z-index issues) */
+.date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.75rem;
+}
+.date-field-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+.date-native {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  font-size: 0.95rem;
+  color: #111827;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.625rem;
+  cursor: pointer;
+}
+.date-native:focus {
+  outline: none;
+  border-color: var(--zosh-primary);
+  box-shadow: 0 0 0 3px rgba(var(--zosh-rgb), 0.15);
+}
+/* make the native calendar picker indicator larger / easier to tap */
+.date-native::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  padding: 0.15rem;
+}
+.date-native::-webkit-calendar-picker-indicator:hover { opacity: 1; }

@@ -32,6 +32,7 @@ interface CriterionEntry {
   instruction?: string;
   analysis_id?: number;
   analysis_name?: string;
+  measured_at?: string;
 }
 
 interface CriterionGroup {
@@ -375,7 +376,18 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.infoEntry = entry;
     this.criterionSaveError = null;
     this.editValue = entry.value || '';
-    this.editMeasuredAtStr = todayISO();
+    // Show the real measurement date (drives the "expiring" status); fall back
+    // to today only when the criterion has never been measured.
+    this.editMeasuredAtStr = entry.measured_at || todayISO();
+  }
+
+  /** Open the native date picker on click (some browsers only open it via the tiny icon). */
+  openDatePicker(input: HTMLInputElement): void {
+    try {
+      (input as unknown as { showPicker?: () => void }).showPicker?.();
+    } catch {
+      /* not supported or needs the indicator — manual entry still works */
+    }
   }
 
   closeInfo(): void {
@@ -461,15 +473,6 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
       expiration_reminder: '@tui.clock',
     };
     return map[type] || '@tui.info';
-  }
-
-  recTypeEmoji(type: string): string {
-    const map: Record<string, string> = {
-      reminder: '🔔',
-      recommendation: '💡',
-      expiration_reminder: '⏰',
-    };
-    return map[type] || '💡';
   }
 
   removeLabFile(f: File): void {

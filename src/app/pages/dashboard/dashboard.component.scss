@@ -458,10 +458,27 @@
 }
 
 .weekly-type-icon {
-  font-size: 1.25rem;
   flex-shrink: 0;
-  line-height: 1;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-top: 0.1rem;
+  color: #16a34a;
+}
+.weekly-type-icon.type-reminder { color: #f59e0b; }
+.weekly-type-icon.type-recommendation { color: #16a34a; }
+.weekly-type-icon.type-expiration_reminder { color: #f59e0b; }
+.rec-svg { width: 24px; height: 24px; display: block; }
+
+/* Inline icons inside section titles / tabs */
+.ttl-svg {
+  width: 1.05em;
+  height: 1.05em;
+  vertical-align: -0.16em;
+  margin-right: 0.35rem;
+  flex-shrink: 0;
 }
 
 .weekly-body { flex: 1; min-width: 0; }

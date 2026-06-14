@@ -33,6 +33,52 @@
   }
 </ng-template>
 
+<!-- Weekly recommendation type icons -->
+<ng-template #recIcon let-type>
+  @switch (type) {
+    @case ('reminder') {
+      <svg class="rec-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+      </svg>
+    }
+    @case ('expiration_reminder') {
+      <svg class="rec-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 2" />
+      </svg>
+    }
+    @default {
+      <svg class="rec-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 18h6M10 22h4" />
+        <path d="M15.2 14.4A6 6 0 1 0 6 9c0 2 .9 3.6 2 4.5.6.5 1 1.3 1 2.1V17h6v-1.4c0-.8.4-1.6 1.2-2.2z" />
+      </svg>
+    }
+  }
+</ng-template>
+
+<!-- Small inline section/tab icons -->
+<ng-template #iconFlask>
+  <svg class="ttl-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M9 3h6M10 3v5.5L4.6 18a2 2 0 0 0 1.8 3h11.2a2 2 0 0 0 1.8-3L14 8.5V3" />
+    <path d="M8.5 14h7" />
+  </svg>
+</ng-template>
+
+<ng-template #iconCalendar>
+  <svg class="ttl-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="4.5" width="18" height="16" rx="2" />
+    <path d="M3 9.5h18M8 2.5v4M16 2.5v4" />
+  </svg>
+</ng-template>
+
+<ng-template #iconChart>
+  <svg class="ttl-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M4 4v16h16" />
+    <path d="M8 16v-4M12.5 16V8M17 16v-2" />
+  </svg>
+</ng-template>
+
 <div class="page">
 
   <!-- Progress Summary -->
@@ -132,7 +178,7 @@
       [appearance]="activeTab === 'criteria' ? 'primary' : 'flat'"
       (click)="onTabChange('criteria')"
     >
-      🔬 Показатели
+      <ng-container *ngTemplateOutlet="iconFlask"></ng-container> Показатели
     </button>
     <button
       type="button"
@@ -142,7 +188,7 @@
       [appearance]="activeTab === 'weekly' ? 'primary' : 'flat'"
       (click)="onTabChange('weekly')"
     >
-      📅 Рекомендации на неделю
+      <ng-container *ngTemplateOutlet="iconCalendar"></ng-container> Рекомендации на неделю
     </button>
   </div>
 
@@ -220,7 +266,9 @@
     }
 
     <div class="chart-section" *ngIf="!loading && (criteriaGroups.length > 0 || ungroupedEntries.length > 0)">
-      <h2 class="section-title chart-title">📈 Заполнение по группам</h2>
+      <h2 class="section-title chart-title">
+        <ng-container *ngTemplateOutlet="iconChart"></ng-container> Заполнение по группам
+      </h2>
       <div class="chart-wrap">
         @if (loadingChart) {
           <div class="chart-overlay"><tui-loader /></div>
@@ -234,7 +282,7 @@
   <section class="card" *ngIf="activeTab === 'weekly'">
     <div class="section-header">
       <h2 class="section-title">
-        📅 Рекомендации на неделю
+        <ng-container *ngTemplateOutlet="iconCalendar"></ng-container> Рекомендации на неделю
         <span class="week-label" *ngIf="weekStart"> — с {{ weekStart }}</span>
       </h2>
       <div *ngIf="loadingWeekly" class="inline-loader"><tui-loader size="xs" /></div>
@@ -245,22 +293,19 @@
     </div>
 
     <div class="weekly-list">
-      <div *ngFor="let item of weeklyItems" class="weekly-item" [class.spent]="item.weight === 0">
+      <div *ngFor="let item of weeklyItems" class="weekly-item">
         <div class="weekly-type-icon" [class]="'type-' + item.type">
-          {{ recTypeEmoji(item.type) }}
+          <ng-container *ngTemplateOutlet="recIcon; context: { $implicit: item.type }"></ng-container>
         </div>
         <div class="weekly-body">
-          <p class="weekly-title" [class.line-through]="item.weight === 0">{{ item.title }}</p>
+          <p class="weekly-title">{{ item.title }}</p>
           <p class="weekly-text" *ngIf="item.text">{{ item.text }}</p>
           <p class="weekly-meta" *ngIf="item.criterion_name">
-            🔬 {{ item.criterion_name }}
+            <ng-container *ngTemplateOutlet="iconFlask"></ng-container> {{ item.criterion_name }}
           </p>
         </div>
         <div class="weekly-right">
-          @if (item.weight === 0) {
-            <span class="spent-badge">✅ Готово</span>
-          }
-          @if (item.criterion_id && item.weight > 0) {
+          @if (item.criterion_id) {
             <button
               tuiButton
               size="xs"
@@ -337,7 +382,14 @@
 
           <label class="date-field">
             <span class="date-field-label">Дата анализа</span>
-            <input type="date" class="date-native" [(ngModel)]="editMeasuredAtStr" [max]="maxAnalysisDate" />
+            <input
+              #dateInput
+              type="date"
+              class="date-native"
+              [(ngModel)]="editMeasuredAtStr"
+              [max]="maxAnalysisDate"
+              (click)="openDatePicker(dateInput)"
+            />
           </label>
 
           @if (criterionSaveError) {

@@ -18,15 +18,8 @@ import { switchMap, takeWhile } from 'rxjs/operators';
 
 import { ApiService } from '../../core/services/api.service';
 import { NavComponent } from '../../shared/nav/nav.component';
-import { AuthService } from '../../core/services/auth.service';
+import { AuthService, PENDING_AUTH_KEY } from '../../core/services/auth.service';
 import { WebsocketService, WsMessage } from '../../core/services/websocket.service';
-
-/**
- * Ключ авторизационного челленджа, сохранённый между запусками. Нужен для
- * мини-аппа: пользователь уходит в бота (webview закрывается), бот кладёт токен
- * в Redis под этим ключом, а при повторном открытии мы его забираем.
- */
-const PENDING_KEY = 'zdravoshag_pending_auth_key';
 
 @Component({
   selector: 'app-auth',
@@ -81,7 +74,7 @@ export class AuthComponent implements OnInit, OnDestroy {
   private readonly onVisible = (): void => {
     if (this.authenticated) return;
     if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
-    const key = this.currentKey || (this.auth.isBrowser ? localStorage.getItem(PENDING_KEY) : null);
+    const key = this.currentKey || (this.auth.isBrowser ? localStorage.getItem(PENDING_AUTH_KEY) : null);
     if (key) this.redeemKey(key, false);
   };
 
@@ -106,7 +99,7 @@ export class AuthComponent implements OnInit, OnDestroy {
 
     // Возврат из бота в мини-апп: если остался ключ с прошлого запуска —
     // токен уже мог появиться, пробуем забрать его, не открывая бота заново.
-    const pending = localStorage.getItem(PENDING_KEY);
+    const pending = localStorage.getItem(PENDING_AUTH_KEY);
     if (pending) {
       this.redeemKey(pending, true);
       return;
@@ -181,7 +174,7 @@ export class AuthComponent implements OnInit, OnDestroy {
         // Запоминаем ключ, чтобы забрать токен после возврата из бота
         // (в мини-аппе webview закрывается и теряет состояние в памяти).
         try {
-          localStorage.setItem(PENDING_KEY, data.key);
+          localStorage.setItem(PENDING_AUTH_KEY, data.key);
         } catch {
           /* приватный режим — переживём без персиста */
         }
@@ -268,7 +261,7 @@ export class AuthComponent implements OnInit, OnDestroy {
     this.ws.disconnect();
     this.pollSub?.unsubscribe();
     try {
-      localStorage.removeItem(PENDING_KEY);
+      localStorage.removeItem(PENDING_AUTH_KEY);
     } catch {
       /* noop */
     }

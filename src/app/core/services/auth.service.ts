@@ -5,6 +5,13 @@ import { Router } from '@angular/router';
 const TOKEN_KEY = 'zdravoshag_token';
 const USER_ID_KEY = 'zdravoshag_user_id';
 
+/**
+ * Ключ авторизационного челленджа, сохранённый между запусками. Нужен мини-аппу:
+ * пользователь уходит в бота (webview закрывается), бот кладёт токен в Redis под
+ * этим ключом, а при повторном открытии приложения мы его забираем.
+ */
+export const PENDING_AUTH_KEY = 'zdravoshag_pending_auth_key';
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private platformId = inject(PLATFORM_ID);

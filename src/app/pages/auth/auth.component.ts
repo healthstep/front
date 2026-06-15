@@ -21,6 +21,13 @@ import { NavComponent } from '../../shared/nav/nav.component';
 import { AuthService } from '../../core/services/auth.service';
 import { WebsocketService, WsMessage } from '../../core/services/websocket.service';
 
+/**
+ * Ключ авторизационного челленджа, сохранённый между запусками. Нужен для
+ * мини-аппа: пользователь уходит в бота (webview закрывается), бот кладёт токен
+ * в Redis под этим ключом, а при повторном открытии мы его забираем.
+ */
+const PENDING_KEY = 'zdravoshag_pending_auth_key';
+
 @Component({
   selector: 'app-auth',
   standalone: true,
@@ -67,6 +74,16 @@ export class AuthComponent implements OnInit, OnDestroy {
 
   private wsSub: Subscription | null = null;
   private pollSub: Subscription | null = null;
+  /** Текущий ключ челленджа (для быстрой проверки при возврате в окно). */
+  private currentKey: string | null = null;
+
+  /** При возврате в мини-апп (бот → снова сайт) сразу пробуем забрать токен. */
+  private readonly onVisible = (): void => {
+    if (this.authenticated) return;
+    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+    const key = this.currentKey || (this.auth.isBrowser ? localStorage.getItem(PENDING_KEY) : null);
+    if (key) this.redeemKey(key, false);
+  };
 
   ngOnInit(): void {
     if (this.auth.isAuthenticated()) {
@@ -79,9 +96,19 @@ export class AuthComponent implements OnInit, OnDestroy {
       return;
     }
 
+    document.addEventListener('visibilitychange', this.onVisible);
+
     const token = this.route.snapshot.queryParamMap.get('token');
     if (token) {
       this.processOneTimeToken(token);
+      return;
+    }
+
+    // Возврат из бота в мини-апп: если остался ключ с прошлого запуска —
+    // токен уже мог появиться, пробуем забрать его, не открывая бота заново.
+    const pending = localStorage.getItem(PENDING_KEY);
+    if (pending) {
+      this.redeemKey(pending, true);
       return;
     }
 
@@ -92,6 +119,30 @@ export class AuthComponent implements OnInit, OnDestroy {
     this.ws.disconnect();
     this.wsSub?.unsubscribe();
     this.pollSub?.unsubscribe();
+    if (isPlatformBrowser(this.platformId)) {
+      document.removeEventListener('visibilitychange', this.onVisible);
+    }
+  }
+
+  /**
+   * Пробует обменять сохранённый ключ на токен. Если токена ещё нет и
+   * startFresh=true — запускает новый челлендж (первый вход).
+   */
+  private redeemKey(key: string, startFresh: boolean): void {
+    if (startFresh) this.loadingChallenge = true;
+    this.api.checkAuthKey(key).subscribe({
+      next: (res: any) => {
+        const d = res.data || res;
+        if (d?.token) {
+          this.finishAuth(d.token, d.user_id || '');
+        } else if (startFresh) {
+          this.startChallenge();
+        }
+      },
+      error: () => {
+        if (startFresh) this.startChallenge();
+      },
+    });
   }
 
   processOneTimeToken(token: string): void {
@@ -126,6 +177,14 @@ export class AuthComponent implements OnInit, OnDestroy {
         const data = res.data || res;
         this.tgUrl = data.tg_bot_url;
         this.maxUrl = data.max_bot_url;
+        this.currentKey = data.key;
+        // Запоминаем ключ, чтобы забрать токен после возврата из бота
+        // (в мини-аппе webview закрывается и теряет состояние в памяти).
+        try {
+          localStorage.setItem(PENDING_KEY, data.key);
+        } catch {
+          /* приватный режим — переживём без персиста */
+        }
 
         if (isPlatformBrowser(this.platformId)) {
           // Primary: WebSocket
@@ -208,6 +267,11 @@ export class AuthComponent implements OnInit, OnDestroy {
     this.auth.setAuth(token, userId);
     this.ws.disconnect();
     this.pollSub?.unsubscribe();
+    try {
+      localStorage.removeItem(PENDING_KEY);
+    } catch {
+      /* noop */
+    }
     setTimeout(() => this.router.navigateByUrl('/dashboard'), 600);
   }
 }
